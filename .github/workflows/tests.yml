@@ -63,7 +63,20 @@ jobs:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
           target: google_apis
-          script: ./gradlew connectedDebugAndroidTest
+          # ScreenshotsTest writes PNGs of the app's screens; pull them while
+          # the emulator is still up, whatever the test outcome.
+          script: |
+            ./gradlew connectedDebugAndroidTest; status=$?
+            adb pull /sdcard/Android/data/ir.sorinflow.smsforwarder/files/screenshots screenshots || echo "no screenshots to pull"
+            exit $status
+
+      - name: Upload app screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-api${{ matrix.api-level }}
+          path: screenshots
+          if-no-files-found: ignore
 
       - name: Upload instrumented test report
         if: always()
