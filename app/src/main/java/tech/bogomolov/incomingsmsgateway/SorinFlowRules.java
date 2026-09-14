@@ -3,6 +3,8 @@ package tech.bogomolov.incomingsmsgateway;
 import android.content.Context;
 
 import org.apache.commons.text.StringEscapeUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -37,6 +39,9 @@ public final class SorinFlowRules {
 
     /** Extracts the six Latin digits after "Code:"; the server re-extracts from text if this is empty. */
     static final String CODE_PLACEHOLDER = "%Regex=Code:\\s*(\\d{6})%";
+
+    /** Names this phone to the server, which then verifies the signature with the phone's own secret. */
+    public static final String HEADER_DEVICE_ID = "X-Forwarder-Id";
 
     private SorinFlowRules() {
     }
@@ -104,13 +109,28 @@ public final class SorinFlowRules {
                 + "\"version\":\"%version%\"}";
     }
 
-    static ForwardingConfig buildRule(Context context, String key, String kind, String filter,
-                                      SorinFlowSettings settings) {
-        return buildRule(context, key, kind, filter, settings.getBaseUrl(), settings.getAccount(), 0);
+    /** Request headers for every SorinFlow request: the user agent plus X-Forwarder-Id when the phone has a panel device id. */
+    public static String headersJson(String deviceId) {
+        JSONObject headers = new JSONObject();
+        try {
+            headers.put("User-Agent", "SorinFlow Forwarder/" + BuildConfig.VERSION_NAME);
+            if (deviceId != null && !deviceId.isEmpty()) {
+                headers.put(HEADER_DEVICE_ID, deviceId);
+            }
+        } catch (JSONException e) {
+            return ForwardingConfig.getDefaultJsonHeaders();
+        }
+        return headers.toString();
     }
 
     static ForwardingConfig buildRule(Context context, String key, String kind, String filter,
-                                      String baseUrl, String account, int simSlot) {
+                                      SorinFlowSettings settings) {
+        return buildRule(context, key, kind, filter, settings.getBaseUrl(), settings.getAccount(), 0,
+                settings.getDeviceId());
+    }
+
+    static ForwardingConfig buildRule(Context context, String key, String kind, String filter,
+                                      String baseUrl, String account, int simSlot, String deviceId) {
         ForwardingConfig config = new ForwardingConfig(context);
         config.setKey(key);
         config.setSender(SENDER);
@@ -119,7 +139,7 @@ public final class SorinFlowRules {
         config.setUrl(otpUrl(baseUrl));
         config.setSimSlot(simSlot);
         config.setTemplate(messageTemplate(kind, account));
-        config.setHeaders(ForwardingConfig.getDefaultJsonHeaders());
+        config.setHeaders(headersJson(deviceId));
         config.setRetriesNumber(ForwardingConfig.getDefaultRetriesNumber());
         config.setIgnoreSsl(false);
         config.setChunkedMode(false);
@@ -141,15 +161,16 @@ public final class SorinFlowRules {
     public static List<ForwardingConfig> buildRules(Context context, SorinFlowSettings settings) {
         List<ForwardingConfig> rules = new ArrayList<>();
         String base = settings.getBaseUrl();
+        String device = settings.getDeviceId();
         if (!settings.hasSecondAccount()) {
-            rules.add(buildRule(context, KEY_CONTACT, KIND_CONTACT, FILTER_CONTACT, base, settings.getAccount(), 0));
-            rules.add(buildRule(context, KEY_LOGIN, KIND_LOGIN, FILTER_LOGIN, base, settings.getAccount(), 0));
+            rules.add(buildRule(context, KEY_CONTACT, KIND_CONTACT, FILTER_CONTACT, base, settings.getAccount(), 0, device));
+            rules.add(buildRule(context, KEY_LOGIN, KIND_LOGIN, FILTER_LOGIN, base, settings.getAccount(), 0, device));
             return rules;
         }
-        rules.add(buildRule(context, KEY_CONTACT, KIND_CONTACT, FILTER_CONTACT, base, settings.getAccount(), 1));
-        rules.add(buildRule(context, KEY_LOGIN, KIND_LOGIN, FILTER_LOGIN, base, settings.getAccount(), 1));
-        rules.add(buildRule(context, KEY_CONTACT_SIM2, KIND_CONTACT, FILTER_CONTACT, base, settings.getAccount2(), 2));
-        rules.add(buildRule(context, KEY_LOGIN_SIM2, KIND_LOGIN, FILTER_LOGIN, base, settings.getAccount2(), 2));
+        rules.add(buildRule(context, KEY_CONTACT, KIND_CONTACT, FILTER_CONTACT, base, settings.getAccount(), 1, device));
+        rules.add(buildRule(context, KEY_LOGIN, KIND_LOGIN, FILTER_LOGIN, base, settings.getAccount(), 1, device));
+        rules.add(buildRule(context, KEY_CONTACT_SIM2, KIND_CONTACT, FILTER_CONTACT, base, settings.getAccount2(), 2, device));
+        rules.add(buildRule(context, KEY_LOGIN_SIM2, KIND_LOGIN, FILTER_LOGIN, base, settings.getAccount2(), 2, device));
         return rules;
     }
 

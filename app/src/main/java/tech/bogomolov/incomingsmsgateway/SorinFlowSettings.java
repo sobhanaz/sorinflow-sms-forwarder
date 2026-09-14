@@ -25,6 +25,7 @@ public class SorinFlowSettings {
     private static final String KEY_ACCOUNT = "account";
     private static final String KEY_ACCOUNT2 = "account2";
     private static final String KEY_SECRET = "secret";
+    private static final String KEY_DEVICE_ID = "device_id";
 
     // Opening the encrypted store costs a Keystore round-trip, so it is opened once
     // per process.
@@ -34,17 +35,28 @@ public class SorinFlowSettings {
     private final String account;
     private final String account2;
     private final String secret;
+    private final String deviceId;
 
     public SorinFlowSettings(String baseUrl, String account, String secret) {
-        this(baseUrl, account, "", secret);
+        this(baseUrl, account, "", secret, "");
     }
 
     /** account2 is the Divar account of the SIM in slot 2 on a dual-SIM phone; empty when unused. */
     public SorinFlowSettings(String baseUrl, String account, String account2, String secret) {
+        this(baseUrl, account, account2, secret, "");
+    }
+
+    /**
+     * deviceId is the panel's per-phone id (sent as X-Forwarder-Id so the server
+     * checks this phone's own secret); empty means the server's shared secret.
+     */
+    public SorinFlowSettings(String baseUrl, String account, String account2, String secret,
+                             String deviceId) {
         this.baseUrl = baseUrl == null ? "" : baseUrl;
         this.account = account == null ? "" : account;
         this.account2 = account2 == null ? "" : account2;
         this.secret = secret == null ? "" : secret;
+        this.deviceId = deviceId == null ? "" : deviceId.trim();
     }
 
     public String getBaseUrl() {
@@ -63,6 +75,10 @@ public class SorinFlowSettings {
         return !this.account2.isEmpty();
     }
 
+    public String getDeviceId() {
+        return this.deviceId;
+    }
+
     public String getSecret() {
         return this.secret;
     }
@@ -77,7 +93,8 @@ public class SorinFlowSettings {
                 pref.getString(KEY_BASE_URL, ""),
                 pref.getString(KEY_ACCOUNT, ""),
                 pref.getString(KEY_ACCOUNT2, ""),
-                pref.getString(KEY_SECRET, ""));
+                pref.getString(KEY_SECRET, ""),
+                pref.getString(KEY_DEVICE_ID, ""));
     }
 
     public void save(Context context) {
@@ -86,6 +103,7 @@ public class SorinFlowSettings {
                 .putString(KEY_ACCOUNT, this.account)
                 .putString(KEY_ACCOUNT2, this.account2)
                 .putString(KEY_SECRET, this.secret)
+                .putString(KEY_DEVICE_ID, this.deviceId)
                 .commit();
     }
 

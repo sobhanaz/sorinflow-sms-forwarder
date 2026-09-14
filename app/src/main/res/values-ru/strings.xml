@@ -127,4 +127,6 @@
     <string name="btn_allow_background">Разрешить фон</string>
     <string name="status_update_available">Доступно обновление: %s</string>
     <string name="btn_update">Скачать</string>
+    <string name="label_device_id">ID устройства из панели (необязательно)</string>
+    <string name="device_id_hint">Заполняется из QR-кода. С ним сервер проверяет секрет именно этого телефона и может отозвать только его.</string>
 </resources>

@@ -50,7 +50,8 @@ public class SetupActivity extends AppCompatActivity {
         // repository secret); a fresh install starts with it pre-filled.
         String baseUrl = settings.getBaseUrl().isEmpty()
                 ? BuildConfig.DEFAULT_SERVER_URL : settings.getBaseUrl();
-        fill(baseUrl, settings.getAccount(), settings.getAccount2(), settings.getSecret());
+        fill(baseUrl, settings.getAccount(), settings.getAccount2(), settings.getSecret(),
+                settings.getDeviceId());
 
         findViewById(R.id.btn_setup_save).setOnClickListener(v -> save());
         findViewById(R.id.btn_scan_qr).setOnClickListener(v -> scanner.launch(new ScanOptions()
@@ -82,15 +83,17 @@ public class SetupActivity extends AppCompatActivity {
             Toast.makeText(this, R.string.setup_payload_invalid, Toast.LENGTH_LONG).show();
             return;
         }
-        fill(settings.getBaseUrl(), settings.getAccount(), settings.getAccount2(), settings.getSecret());
+        fill(settings.getBaseUrl(), settings.getAccount(), settings.getAccount2(), settings.getSecret(),
+                settings.getDeviceId());
         Toast.makeText(this, R.string.setup_payload_applied, Toast.LENGTH_LONG).show();
     }
 
-    private void fill(String baseUrl, String account, String account2, String secret) {
+    private void fill(String baseUrl, String account, String account2, String secret, String deviceId) {
         ((EditText) findViewById(R.id.input_server_url)).setText(baseUrl);
         ((EditText) findViewById(R.id.input_account_phone)).setText(account);
         ((EditText) findViewById(R.id.input_account_phone2)).setText(account2);
         ((EditText) findViewById(R.id.input_shared_secret)).setText(secret);
+        ((EditText) findViewById(R.id.input_device_id)).setText(deviceId);
     }
 
     private void save() {
@@ -138,7 +141,8 @@ public class SetupActivity extends AppCompatActivity {
             return null;
         }
 
-        return new SorinFlowSettings(baseUrl, phone, phone2, secret);
+        String deviceId = ((EditText) findViewById(R.id.input_device_id)).getText().toString().trim();
+        return new SorinFlowSettings(baseUrl, phone, phone2, secret, deviceId);
     }
 
     @Override

@@ -12,8 +12,11 @@ import java.util.Map;
  * Parses what a SorinFlow panel QR code (or a {@code sorinflow://setup} link)
  * carries into settings. Two shapes are accepted:
  * <pre>
- * sorinflow://setup?server=https://…&amp;account=0912…&amp;account2=0935…&amp;secret=…
- * {"server":"https://…","account":"0912…","account2":"0935…","secret":"…"}
+ * sorinflow://setup?server=https://…&amp;account=0912…&amp;account2=0935…&amp;device=…&amp;secret=…
+ * {"server":"https://…","account":"0912…","account2":"0935…","device":"…","secret":"…"}
+ * </pre>
+ * {@code device} is the panel's per-phone id (optional; older panels use one shared secret).
+ * <pre>
  * </pre>
  * The result still goes through the setup form, so the user sees and confirms it.
  */
@@ -35,7 +38,8 @@ public final class SetupPayload {
             try {
                 JSONObject json = new JSONObject(trimmed);
                 return build(json.optString("server", ""), json.optString("account", ""),
-                        json.optString("account2", ""), json.optString("secret", ""));
+                        json.optString("account2", ""), json.optString("secret", ""),
+                        json.optString("device", ""));
             } catch (JSONException e) {
                 return null;
             }
@@ -58,7 +62,7 @@ public final class SetupPayload {
             params.put(decode(pair.substring(0, eq)), decode(pair.substring(eq + 1)));
         }
         return build(param(params, "server"), param(params, "account"),
-                param(params, "account2"), param(params, "secret"));
+                param(params, "account2"), param(params, "secret"), param(params, "device"));
     }
 
     private static String param(Map<String, String> params, String name) {
@@ -74,12 +78,13 @@ public final class SetupPayload {
         }
     }
 
-    private static SorinFlowSettings build(String server, String account, String account2, String secret) {
+    private static SorinFlowSettings build(String server, String account, String account2,
+                                           String secret, String device) {
         String baseUrl = SorinFlowRules.normalizeBaseUrl(server);
         if (baseUrl == null) {
             return null;
         }
         return new SorinFlowSettings(baseUrl, OtpCodes.normalizePhone(account),
-                OtpCodes.normalizePhone(account2), secret.trim());
+                OtpCodes.normalizePhone(account2), secret.trim(), device.trim());
     }
 }

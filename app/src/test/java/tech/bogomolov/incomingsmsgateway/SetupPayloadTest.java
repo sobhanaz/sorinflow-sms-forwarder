@@ -36,6 +36,15 @@ public class SetupPayloadTest {
     }
 
     @Test
+    public void carriesThePanelDeviceId() {
+        SorinFlowSettings s = SetupPayload.parse(
+                "sorinflow://setup?server=https://sorinflow.example&account=09123456789&device=1a2b3c4d5e6f7a8b&secret=x");
+        assertNotNull(s);
+        assertEquals("1a2b3c4d5e6f7a8b", s.getDeviceId());
+        assertEquals("", SetupPayload.parse("sorinflow://setup?server=https://sorinflow.example").getDeviceId());
+    }
+
+    @Test
     public void acceptsAnOptionalSlashBeforeTheQuery() {
         assertNotNull(SetupPayload.parse("sorinflow://setup/?server=https://sorinflow.example&account=1&secret=x"));
     }

@@ -127,4 +127,6 @@
     <string name="btn_allow_background">Allow background</string>
     <string name="status_update_available">Update available: %s</string>
     <string name="btn_update">Download</string>
+    <string name="label_device_id">Device ID from the panel (optional)</string>
+    <string name="device_id_hint">Filled by the QR code. With it the server checks this phone\'s own secret and can revoke just this phone.</string>
 </resources>

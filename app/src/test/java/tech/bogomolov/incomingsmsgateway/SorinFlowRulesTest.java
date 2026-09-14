@@ -61,6 +61,19 @@ public class SorinFlowRulesTest {
     }
 
     @Test
+    public void rulesNameThePhoneToTheServerWhenADeviceIdIsSet() throws Exception {
+        SorinFlowSettings withDevice = new SorinFlowSettings("https://sorinflow.example", "09123456789",
+                "", "s3cret", "1a2b3c4d5e6f7a8b");
+
+        JSONObject headers = new JSONObject(SorinFlowRules.buildRules(null, withDevice).get(0).getHeaders());
+        assertEquals("1a2b3c4d5e6f7a8b", headers.getString(SorinFlowRules.HEADER_DEVICE_ID));
+        assertTrue(headers.getString("User-Agent").startsWith("SorinFlow Forwarder/"));
+
+        JSONObject plain = new JSONObject(rules().get(0).getHeaders());
+        assertFalse(plain.has(SorinFlowRules.HEADER_DEVICE_ID));
+    }
+
+    @Test
     public void twoAccountsGiveFourSlotBoundRules() throws Exception {
         SorinFlowSettings dual = new SorinFlowSettings("https://sorinflow.example", "09123456789",
                 "09351234567", "s3cret");

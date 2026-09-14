@@ -34,10 +34,15 @@ public final class SorinFlowClient {
     }
 
     /** Blocking signed POST; call off the main thread. */
-    static Request post(String url, String body, String secret, int connectTimeoutMs, int readTimeoutMs) {
+    static Request post(String url, String body, SorinFlowSettings settings, int connectTimeoutMs, int readTimeoutMs) {
+        return post(url, body, settings.getSecret(), settings.getDeviceId(), connectTimeoutMs, readTimeoutMs);
+    }
+
+    static Request post(String url, String body, String secret, String deviceId,
+                        int connectTimeoutMs, int readTimeoutMs) {
         Request request = new Request(url, body);
         request.setTimeouts(connectTimeoutMs, readTimeoutMs);
-        request.setJsonHeaders(ForwardingConfig.getDefaultJsonHeaders());
+        request.setJsonHeaders(SorinFlowRules.headersJson(deviceId));
         request.setSignatureHeader(secret, body);
         request.setUseChunkedMode(false);
         request.execute();
@@ -51,11 +56,11 @@ public final class SorinFlowClient {
     static String sendHeartbeat(Context context, SorinFlowSettings settings) {
         String url = SorinFlowRules.heartbeatUrl(settings.getBaseUrl());
         Request request = post(url, heartbeatBody(context, settings.getAccount()),
-                settings.getSecret(), Request.DEFAULT_CONNECT_TIMEOUT_MS, Request.DEFAULT_READ_TIMEOUT_MS);
+                settings, Request.DEFAULT_CONNECT_TIMEOUT_MS, Request.DEFAULT_READ_TIMEOUT_MS);
         DeliveryStatus.recordHeartbeat(context, request, request.getResult());
         if (settings.hasSecondAccount()) {
             post(url, heartbeatBody(context, settings.getAccount2()),
-                    settings.getSecret(), Request.DEFAULT_CONNECT_TIMEOUT_MS, Request.DEFAULT_READ_TIMEOUT_MS);
+                    settings, Request.DEFAULT_CONNECT_TIMEOUT_MS, Request.DEFAULT_READ_TIMEOUT_MS);
         }
         return request.getResult();
     }
@@ -73,7 +78,7 @@ public final class SorinFlowClient {
             SorinFlowSettings settings = SorinFlowSettings.load(app);
             String body = testBody(app, settings);
             Request request = post(SorinFlowRules.otpUrl(settings.getBaseUrl()), body,
-                    settings.getSecret(), DirectDelivery.CONNECT_TIMEOUT_MS, DirectDelivery.READ_TIMEOUT_MS);
+                    settings, DirectDelivery.CONNECT_TIMEOUT_MS, DirectDelivery.READ_TIMEOUT_MS);
             DeliveryStatus.recordHeartbeat(app, request, request.getResult());
             DeliveryLog.append(app, DeliveryLog.build(body, 0L, request, request.getResult()));
             main.post(() -> callback.onResult(request, request.getResult()));

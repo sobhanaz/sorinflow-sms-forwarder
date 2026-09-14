@@ -127,4 +127,6 @@
     <string name="btn_allow_background">اجازهٔ پس‌زمینه</string>
     <string name="status_update_available">به‌روزرسانی موجود است: %s</string>
     <string name="btn_update">دانلود</string>
+    <string name="label_device_id">شناسهٔ دستگاه از پنل (اختیاری)</string>
+    <string name="device_id_hint">با کد QR پر می‌شود. با آن، سرور کلید مخصوص همین گوشی را بررسی می‌کند و می‌تواند فقط همین گوشی را لغو کند.</string>
 </resources>
