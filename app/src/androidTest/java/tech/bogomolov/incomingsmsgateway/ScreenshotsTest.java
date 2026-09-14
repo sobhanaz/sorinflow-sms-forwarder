@@ -8,10 +8,8 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 import android.Manifest;
-import android.app.UiAutomation;
 import android.content.Context;
 import android.os.Build;
-import android.os.ParcelFileDescriptor;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.os.LocaleListCompat;
@@ -26,8 +24,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Renders the app's screens in known states and saves PNG screenshots to
@@ -42,7 +38,7 @@ public class ScreenshotsTest {
 
     private static final String SERVER = "https://sorinflow.example";
     private static final String ACCOUNT = "09123456789";
-    private static final String SCREENSHOT_DIR = "/sdcard/Download/sorinflow-screenshots";
+    private static final String SCREENSHOT_DIR = TestShell.ARTIFACT_DIR;
 
     private final Context context =
             InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -184,21 +180,7 @@ public class ScreenshotsTest {
     // write there itself under scoped storage.
     private void capture(String name) {
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
-        shell("mkdir -p " + SCREENSHOT_DIR);
-        shell("screencap -p " + SCREENSHOT_DIR + "/" + name + ".png");
-    }
-
-    private static void shell(String command) {
-        UiAutomation automation = InstrumentationRegistry.getInstrumentation().getUiAutomation();
-        ParcelFileDescriptor fd = automation.executeShellCommand(command);
-        // Drain the output so the command has finished before we move on.
-        try (InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(fd)) {
-            byte[] buffer = new byte[4096];
-            while (in.read(buffer) != -1) {
-                // discard
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException("shell command failed: " + command, e);
-        }
+        TestShell.run("mkdir -p " + SCREENSHOT_DIR);
+        TestShell.run("screencap -p " + SCREENSHOT_DIR + "/" + name + ".png");
     }
 }

@@ -25,6 +25,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -95,6 +100,7 @@ public class EndToEndDeliveryTest {
         long latency = System.currentTimeMillis() - injected;
         assertNotNull("no request reached the server", request);
         Log.i("EndToEnd", "SMS injected -> request at server: " + latency + " ms");
+        recordMeasurement("sms_injected_to_server_ms=" + latency);
 
         assertEquals("POST", request.getMethod());
         assertEquals("/api/scraper/otp-inbound", request.getPath());
@@ -142,6 +148,21 @@ public class EndToEndDeliveryTest {
         assertEquals(DeliveryStatus.RESULT_RETRYING, log.get(1).result);
         assertEquals(500, log.get(1).http);
         assertEquals("boom", log.get(1).reason);
+    }
+
+    // Written next to the screenshots so CI keeps the number as an artifact
+    // (the emulator's logcat is not collected).
+    private void recordMeasurement(String line) {
+        try {
+            File local = new File(context.getExternalFilesDir(null), "e2e-latency.txt");
+            try (OutputStream out = new FileOutputStream(local, true)) {
+                out.write((line + "\n").getBytes(StandardCharsets.UTF_8));
+            }
+            TestShell.run("mkdir -p " + TestShell.ARTIFACT_DIR);
+            TestShell.run("cp " + local.getAbsolutePath() + " " + TestShell.ARTIFACT_DIR + "/e2e-latency.txt");
+        } catch (IOException e) {
+            Log.e("EndToEnd", "cannot record measurement: " + e);
+        }
     }
 
     private void releaseFallback() throws Exception {
