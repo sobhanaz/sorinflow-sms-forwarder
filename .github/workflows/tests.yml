@@ -70,6 +70,8 @@ jobs:
           script: |
             ./gradlew connectedDebugAndroidTest; status=$?
             adb pull /sdcard/Download/sorinflow-screenshots screenshots || echo "no screenshots to pull"
+            mkdir -p screenshots
+            adb logcat -d -s EndToEnd:I SmsGateway:I | grep -E "SMS injected|delivery kind" > screenshots/e2e-latency.txt || echo "no latency lines in logcat"
             exit $status
 
       - name: Upload app screenshots
