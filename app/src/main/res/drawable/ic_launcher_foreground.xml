@@ -1,0 +1,13 @@
+<!-- Original mark: a message bubble with a forward arrow, centred in the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,30h44a8,8 0 0 1 8,8v24a8,8 0 0 1 -8,8h-30l-10,10v-10h-4a8,8 0 0 1 -8,-8v-24a8,8 0 0 1 8,-8z" />
+    <path
+        android:fillColor="#0B2545"
+        android:pathData="M38,47h22v-7l12,10l-12,10v-7h-22z" />
+</vector>

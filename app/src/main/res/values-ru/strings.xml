@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">SMS пересылатель</string>
+    <string name="app_name">SorinFlow Forwarder</string>
     <string name="permission_needed">Установите разрешение на доступ к SMS, чтобы использовать это приложение.</string>
-    <string name="empty_list_hint">Пока нет правил пересылки.\nНажмите +, чтобы добавить.</string>
+    <string name="empty_list_hint">Пока нет правил пересылки.\nНастройте SorinFlow выше или нажмите +, чтобы добавить правило.</string>
     <string name="input_url">https://example.com</string>
     <string name="label_advanced">Дополнительные параметры</string>
     <string name="label_routing_params">Настройки маршрутизации</string>
@@ -14,7 +14,7 @@
     <string name="btn_edit">Изменить</string>
     <string name="btn_delete">Удалить</string>
     <string name="delete_record">Удалить запись</string>
-    <string name="key_phones_preference">телефоны</string>
+    <string name="key_phones_preference">phones</string>
     <string name="label_add_sender">Отправитель (номер или текст)</string>
     <string name="label_number_retries">Количество повторных попыток</string>
     <string name="label_url">URL</string>
@@ -45,6 +45,7 @@
     <string name="any">Любой</string>
     <string name="confirm_delete">Вы действительно хотите удалить "%s"?</string>
     <string name="notification_channel">По умолчанию</string>
+    <string name="notification_running">Пересылает коды Divar в SorinFlow</string>
     <string name="menu_syslog">Журнал</string>
     <string name="menu_settings">Настройки</string>
     <string name="title_settings">Настройки</string>
@@ -68,4 +69,40 @@
     <string name="backup_export_failed">Не удалось экспортировать</string>
     <string name="backup_import_success">Импортировано правил: %d</string>
     <string name="backup_import_failed">Не удалось импортировать: неверный файл резервной копии</string>
+
+    <!-- SorinFlow setup screen -->
+    <string name="title_setup">Настройка SorinFlow</string>
+    <string name="menu_setup">Настройка SorinFlow</string>
+    <string name="label_setup_section">Подключить этот телефон к SorinFlow</string>
+    <string name="setup_info">Укажите сервер SorinFlow, аккаунт Divar, чья SIM-карта стоит в этом телефоне, и общий секрет, заданный на сервере. При сохранении создаются два правила пересылки для Divar и включается heartbeat.</string>
+    <string name="label_server_url">Адрес сервера SorinFlow</string>
+    <string name="server_url_hint">https://sorinflow.com</string>
+    <string name="label_account_phone">Номер телефона аккаунта Divar</string>
+    <string name="account_phone_hint">Номер SIM-карты в этом телефоне, например 09123456789</string>
+    <string name="label_shared_secret">Общий секрет</string>
+    <string name="shared_secret_hint">То же значение, что задано на сервере SorinFlow</string>
+    <string name="error_https_url">Адрес должен начинаться с https://</string>
+    <string name="error_wrong_phone">Введите номер телефона, не менее 10 цифр</string>
+    <string name="error_empty_secret">Секрет обязателен</string>
+    <string name="setup_saved_toast">Сохранено. Правила Divar и heartbeat включены.</string>
+
+    <!-- SorinFlow status card -->
+    <string name="status_title">SorinFlow</string>
+    <string name="status_not_configured">Телефон ещё не подключён к SorinFlow. Нажмите «Настроить».</string>
+    <string name="status_account">Аккаунт %s</string>
+    <string name="status_server_none">Сервер: heartbeat ещё не отправлялся</string>
+    <string name="status_server_ok">Сервер доступен · HTTP %1$d · %2$s</string>
+    <string name="status_server_fail">Сервер недоступен · %1$s · %2$s</string>
+    <string name="status_last_none">Ещё ни одно сообщение не переслано</string>
+    <string name="status_last_message">Последнее: %1$s %2$s · %3$s</string>
+    <string name="status_last_detail">HTTP %1$d · %2$d мс туда-обратно · %3$s после SMS · %4$s</string>
+    <string name="status_result_ok">доставлено</string>
+    <string name="status_result_retrying">повторяем</string>
+    <string name="status_result_failed">не доставлено</string>
+    <string name="status_failed_count">Сохранено недоставленных сообщений: %d</string>
+    <string name="btn_setup">Настроить</string>
+    <string name="btn_send_test">Отправить тест на сервер</string>
+    <string name="test_sending">Отправляем тест…</string>
+    <string name="test_result_ok">Сервер ответил HTTP %1$d за %2$d мс (%3$s)</string>
+    <string name="test_result_fail">Тест не прошёл: %s</string>
 </resources>

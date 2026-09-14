@@ -55,9 +55,11 @@ public class WebhookCallerTest {
     }
 
     @Test
-    public void testHttpSuccess() throws Exception {
+    public void testHttpBlockedByCleartextPolicy() throws Exception {
+        // usesCleartextTraffic="false": a plain-http endpoint fails at connect time,
+        // which the worker reports as a retry (ENQUEUED), never as a success.
         WorkInfo workInfo = this.getWorkInfo("http://httpbin.org/post", "test", "{}", false);
-        assertThat(workInfo.getState(), is(WorkInfo.State.SUCCEEDED));
+        assertThat(workInfo.getState(), is(WorkInfo.State.ENQUEUED));
     }
 
     @Test

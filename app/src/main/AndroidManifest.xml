@@ -1,26 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="tech.bogomolov.incomingsmsgateway">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!--
+        allowBackup=false: the rule store and the encrypted SorinFlow settings are
+        bound to this device; a restored copy without its Keystore key would be
+        unreadable anyway. usesCleartextTraffic=false: SorinFlow endpoints are
+        https-only, and a plain-http rule fails at connect time rather than
+        leaking a one-time code.
+    -->
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="false">
+
+        <!--
+            specialUse (Android 14+): keeps the process alive so codes are forwarded
+            within seconds; unlike dataSync it carries no daily runtime limit. The
+            property documents the sub-type as Android 14 asks.
+        -->
         <service
             android:name=".SmsReceiverService"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps the SMS forwarder alive so one-time codes reach the server within seconds" />
+        </service>
 
         <!--
             SMS delivery is driven by this manifest-declared receiver, not by a
@@ -50,6 +68,12 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <activity
+            android:name=".SetupActivity"
+            android:exported="false"
+            android:label="@string/title_setup"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".SettingsActivity"

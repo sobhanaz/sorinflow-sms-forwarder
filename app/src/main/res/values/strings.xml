@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Sms Forwarder</string>
+    <string name="app_name">SorinFlow Forwarder</string>
     <string name="permission_needed">Set permission to access SMS to use this app.</string>
-    <string name="empty_list_hint">No forwarding rules yet.\nTap + to add one.</string>
+    <string name="empty_list_hint">No forwarding rules yet.\nSet up SorinFlow above, or tap + to add a rule.</string>
     <string name="input_url">https://example.com</string>
     <string name="label_advanced">Advanced parameters</string>
     <string name="label_routing_params">Routing parameters</string>
@@ -45,6 +45,7 @@
     <string name="any">Any</string>
     <string name="confirm_delete">Do you really want to delete "%s" record?</string>
     <string name="notification_channel">Default</string>
+    <string name="notification_running">Forwarding Divar codes to SorinFlow</string>
     <string name="menu_syslog">Syslog</string>
     <string name="menu_settings">Settings</string>
     <string name="title_settings">Settings</string>
@@ -68,4 +69,40 @@
     <string name="backup_export_failed">Export failed</string>
     <string name="backup_import_success">Imported %d rule(s)</string>
     <string name="backup_import_failed">Import failed: not a valid backup file</string>
+
+    <!-- SorinFlow setup screen -->
+    <string name="title_setup">SorinFlow setup</string>
+    <string name="menu_setup">SorinFlow setup</string>
+    <string name="label_setup_section">Connect this phone to SorinFlow</string>
+    <string name="setup_info">Enter the SorinFlow server, the Divar account whose SIM is in this phone, and the shared secret configured on the server. Saving creates the two Divar forwarding rules and turns on the heartbeat.</string>
+    <string name="label_server_url">SorinFlow server URL</string>
+    <string name="server_url_hint">https://sorinflow.com</string>
+    <string name="label_account_phone">Divar account phone number</string>
+    <string name="account_phone_hint">The number of the SIM in this phone, e.g. 09123456789</string>
+    <string name="label_shared_secret">Shared secret</string>
+    <string name="shared_secret_hint">The same value that is configured on the SorinFlow server</string>
+    <string name="error_https_url">Must be an https:// URL</string>
+    <string name="error_wrong_phone">Enter the phone number with at least 10 digits</string>
+    <string name="error_empty_secret">Secret is required</string>
+    <string name="setup_saved_toast">Saved. Divar rules and heartbeat are active.</string>
+
+    <!-- SorinFlow status card -->
+    <string name="status_title">SorinFlow</string>
+    <string name="status_not_configured">Not connected to SorinFlow yet. Tap Set up.</string>
+    <string name="status_account">Account %s</string>
+    <string name="status_server_none">Server: no heartbeat sent yet</string>
+    <string name="status_server_ok">Server reachable · HTTP %1$d · %2$s</string>
+    <string name="status_server_fail">Server unreachable · %1$s · %2$s</string>
+    <string name="status_last_none">No message forwarded yet</string>
+    <string name="status_last_message">Last: %1$s %2$s · %3$s</string>
+    <string name="status_last_detail">HTTP %1$d · %2$d ms round trip · %3$s after SMS · %4$s</string>
+    <string name="status_result_ok">delivered</string>
+    <string name="status_result_retrying">retrying</string>
+    <string name="status_result_failed">failed</string>
+    <string name="status_failed_count">%d message(s) stored as failed</string>
+    <string name="btn_setup">Set up</string>
+    <string name="btn_send_test">Send test to server</string>
+    <string name="test_sending">Sending test…</string>
+    <string name="test_result_ok">Server answered HTTP %1$d in %2$d ms (%3$s)</string>
+    <string name="test_result_fail">Test failed: %s</string>
 </resources>

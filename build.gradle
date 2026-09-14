@@ -5,6 +5,10 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        // Fallback mirror of Google's Maven repository for networks where
+        // dl.google.com is blocked (it answers 404 there, so Gradle simply
+        // continues to this one). Remove if you don't need it.
+        maven { url = uri('https://maven.aliyun.com/repository/google') }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:9.2.1'
@@ -18,6 +22,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri('https://maven.aliyun.com/repository/google') }
     }
 }
 
