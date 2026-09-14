@@ -26,7 +26,7 @@ jobs:
 
       - name: Upload unit test report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: unit-test-report
           path: app/build/reports/tests/testDebugUnitTest
@@ -74,7 +74,7 @@ jobs:
 
       - name: Upload app screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: screenshots-api${{ matrix.api-level }}
           path: screenshots
@@ -82,7 +82,7 @@ jobs:
 
       - name: Upload instrumented test report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: instrumented-test-report-api${{ matrix.api-level }}
           path: app/build/reports/androidTests/connected
