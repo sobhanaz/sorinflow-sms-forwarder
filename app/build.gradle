@@ -98,7 +98,7 @@ dependencies {
     // The mockable android.jar used by JVM unit tests stubs org.json (every
     // method returns null/0); this real implementation shadows it so tests can
     // parse the JSON the app produces.
-    testImplementation 'org.json:json:20231013'
+    testImplementation 'org.json:json:20260814'
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
