@@ -129,4 +129,6 @@
     <string name="btn_update">Download</string>
     <string name="label_device_id">Device ID from the panel (optional)</string>
     <string name="device_id_hint">Filled by the QR code. With it the server checks this phone\'s own secret and can revoke just this phone.</string>
+    <string name="rule_name_contact">Divar · contact-info code</string>
+    <string name="rule_name_login">Divar · login code</string>
 </resources>

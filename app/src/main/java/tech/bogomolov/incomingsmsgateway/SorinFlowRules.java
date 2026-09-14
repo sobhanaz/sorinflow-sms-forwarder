@@ -46,6 +46,23 @@ public final class SorinFlowRules {
     private SorinFlowRules() {
     }
 
+    /**
+     * Human name for a SorinFlow rule in the rule list (the two rules would
+     * otherwise both read "Divar" + the same URL); null for hand-made rules.
+     */
+    public static String displayName(Context context, ForwardingConfig config) {
+        String key = config.getKey();
+        if (key == null || !key.startsWith(KEY_PREFIX)) {
+            return null;
+        }
+        String name = context.getString(key.startsWith(KEY_CONTACT)
+                ? R.string.rule_name_contact : R.string.rule_name_login);
+        if (config.getSimSlot() > 0) {
+            name += " · SIM " + config.getSimSlot();
+        }
+        return name;
+    }
+
     /** True for the rules installed by setup; they sign with the setup secret and use the fast retry ladder. */
     public static boolean isSorinFlowRule(ForwardingConfig config) {
         String key = config.getKey();

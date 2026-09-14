@@ -43,7 +43,15 @@ public class ListAdapter extends ArrayAdapter<ForwardingConfig> {
         String asterisk = context.getString(R.string.asterisk);
         String any = context.getString(R.string.any);
         TextView sender = row.findViewById(R.id.text_sender);
-        sender.setText(senderText.equals(asterisk) ? any : senderText);
+        String title = SorinFlowRules.displayName(context, config);
+        if (title == null) {
+            title = senderText.equals(asterisk) ? any : senderText;
+            // A text filter is what tells two rules for the same sender apart.
+            if (!config.getSmsFilter().isEmpty()) {
+                title += " · " + config.getSmsFilter();
+            }
+        }
+        sender.setText(title);
 
         TextView url = row.findViewById(R.id.text_url);
         url.setText(config.getUrl());
