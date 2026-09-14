@@ -1,17 +1,23 @@
-# Weekly dependency updates: AndroidX/Material/WorkManager grouped into one PR,
-# everything else separately, plus the GitHub Actions used by the workflows.
+# One grouped pull request a month for everything (Gradle dependencies and the
+# GitHub Actions used by the workflows), so the repository never fills up with
+# per-dependency branches. Security advisories still arrive on their own.
 version: 2
 updates:
   - package-ecosystem: gradle
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 1
     groups:
-      androidx:
+      all-dependencies:
         patterns:
-          - "androidx.*"
-          - "com.google.android.material:*"
+          - "*"
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 1
+    groups:
+      all-actions:
+        patterns:
+          - "*"
