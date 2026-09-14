@@ -63,6 +63,8 @@ jobs:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
           target: google_apis
+          # A phone-sized profile so the README screenshots are sharp.
+          profile: pixel_4
           # ScreenshotsTest writes PNGs of the app's screens; pull them while
           # the emulator is still up, whatever the test outcome.
           script: |
