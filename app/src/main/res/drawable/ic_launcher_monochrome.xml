@@ -1,0 +1,24 @@
+<!-- Themed-icon (Android 13+) layer: single-colour roof line and infinity sign. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="1.05"
+        android:scaleY="1.05"
+        android:translateX="20.4"
+        android:translateY="20.4">
+        <path
+            android:pathData="M14,30L30,15L46,30"
+            android:strokeColor="#FFFFFF"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:strokeWidth="4" />
+        <path
+            android:pathData="M19,41C19,35.5 26,35.5 30,41C34,46.5 41,46.5 41,41C41,35.5 34,35.5 30,41C26,46.5 19,46.5 19,41z"
+            android:strokeColor="#FFFFFF"
+            android:strokeLineCap="round"
+            android:strokeWidth="4.2" />
+    </group>
+</vector>

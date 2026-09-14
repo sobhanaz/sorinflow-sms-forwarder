@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#8AB4F8</color>
-    <color name="colorAccent">#8AB4F8</color>
-    <color name="colorDanger">#F28B82</color>
-    <color name="colorSurface">#1E2022</color>
-    <color name="colorBackground">#121315</color>
-    <color name="colorStatusBar">#121315</color>
-    <color name="colorEmptyIcon">#3C4043</color>
+    <!-- Dark palette matching the site: near-black ground, violet accent. -->
+    <color name="colorPrimary">#A78BFA</color>
+    <color name="colorAccent">#A78BFA</color>
+    <color name="colorDanger">#F87171</color>
+    <color name="colorSuccess">#4ADE80</color>
+    <color name="colorMuted">#8F9FB6</color>
+    <color name="colorSurface">#15161F</color>
+    <color name="colorBackground">#0A0A12</color>
+    <color name="colorStatusBar">#0A0A12</color>
+    <color name="colorEmptyIcon">#3B3D4D</color>
 </resources>

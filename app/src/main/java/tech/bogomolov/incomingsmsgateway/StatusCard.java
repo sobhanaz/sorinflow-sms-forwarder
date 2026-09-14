@@ -4,12 +4,15 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.text.format.DateFormat;
 import android.text.format.DateUtils;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.core.content.ContextCompat;
 
 import java.util.Date;
 import java.util.Locale;
@@ -69,22 +72,28 @@ final class StatusCard {
                 : context.getString(R.string.status_not_configured));
 
         TextView server = view.findViewById(R.id.status_server);
+        View dot = view.findViewById(R.id.status_server_dot);
         long heartbeatTime = status.getLong(DeliveryStatus.KEY_HB_TIME, 0L);
+        int dotColor = R.color.colorMuted;
         if (heartbeatTime == 0L) {
             server.setText(R.string.status_server_none);
         } else {
             String ago = DateUtils.getRelativeTimeSpanString(heartbeatTime, now,
                     DateUtils.SECOND_IN_MILLIS).toString();
             if (status.getBoolean(DeliveryStatus.KEY_HB_OK, false)) {
+                dotColor = R.color.colorSuccess;
                 server.setText(context.getString(R.string.status_server_ok,
                         status.getInt(DeliveryStatus.KEY_HB_HTTP, -1), ago));
             } else {
+                dotColor = R.color.colorDanger;
                 String reason = status.getString(DeliveryStatus.KEY_HB_REASON, "");
                 server.setText(context.getString(R.string.status_server_fail,
                         reason.isEmpty() ? "HTTP " + status.getInt(DeliveryStatus.KEY_HB_HTTP, -1) : reason,
                         ago));
             }
         }
+
+        dot.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(context, dotColor)));
 
         TextView last = view.findViewById(R.id.status_last);
         TextView lastDetail = view.findViewById(R.id.status_last_detail);

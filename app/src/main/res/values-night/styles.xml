@@ -1,12 +1,15 @@
 <resources>
 
     <!-- Dark counterpart of Base.AppTheme; color references resolve through
-         values-night/colors.xml. -->
+         values-night/colors.xml. Filled buttons use the light violet primary,
+         so their text is the dark ground colour for contrast. -->
     <style name="Base.AppTheme" parent="Theme.MaterialComponents">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorStatusBar</item>
         <item name="colorSecondary">@color/colorAccent</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorOnPrimary">@color/colorBackground</item>
+        <item name="colorOnSecondary">@color/colorBackground</item>
         <item name="android:colorBackground">@color/colorBackground</item>
         <item name="android:windowBackground">@color/colorBackground</item>
         <item name="actionBarStyle">@style/AppTheme.ActionBar</item>

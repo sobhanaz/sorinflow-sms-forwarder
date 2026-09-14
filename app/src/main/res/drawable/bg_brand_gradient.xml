@@ -1,0 +1,9 @@
+<!-- The site's accent gradient (violet, pink, cyan), used as the card's brand strip. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="0"
+        android:centerColor="#F0A6FF"
+        android:endColor="#67E8F9"
+        android:startColor="#A78BFA"
+        android:type="linear" />
+</shape>

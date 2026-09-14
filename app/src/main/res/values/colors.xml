@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#1A73E8</color>
-    <color name="colorAccent">#1A73E8</color>
-    <color name="colorDanger">#D93025</color>
+    <!-- SorinFlow palette: indigo/violet brand colours from the site and favicon. -->
+    <color name="colorPrimary">#4F46E5</color>
+    <color name="colorAccent">#6366F1</color>
+    <color name="colorDanger">#DC2626</color>
+    <color name="colorSuccess">#16A34A</color>
+    <color name="colorMuted">#8F96A8</color>
     <color name="colorSurface">#FFFFFF</color>
-    <color name="colorBackground">#F6F7F9</color>
+    <color name="colorBackground">#F4F4FB</color>
     <!-- Pre-M there are no dark status-bar icons, so fall back to a dark bar. -->
     <color name="colorStatusBar">#000000</color>
-    <color name="colorEmptyIcon">#C4C9D0</color>
+    <color name="colorEmptyIcon">#C7C9DA</color>
 </resources>

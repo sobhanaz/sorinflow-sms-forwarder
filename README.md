@@ -82,8 +82,8 @@ or codes will stop arriving after a few hours:
    chats → *Turn off RCS chats*. RCS messages never reach the SMS API.
 8. Keep the phone on a charger and, ideally, on Wi-Fi plus mobile data.
 
-After that, the `F` icon in the status bar means the forwarder service is
-running.
+After that, the SorinFlow infinity icon in the status bar means the forwarder
+service is running.
 
 ## Setup (under two minutes per phone)
 
@@ -224,4 +224,4 @@ Protect را با «به هر حال نصب شود» رد کنید (هشدار �
 **راه‌اندازی:** برنامه را باز کنید، دسترسی‌ها را بدهید، روی «راه‌اندازی» بزنید،
 آدرس سرور (در نسخه‌های رسمی از قبل پر شده است)، شمارهٔ موبایل حساب دیوار و
 کلید محرمانه را وارد کنید و ذخیره کنید. سپس «ارسال آزمایشی به سرور» را بزنید؛ باید پاسخ
-HTTP 200 را ببینید. وقتی آیکون `F` در نوار وضعیت هست، برنامه فعال است.
+HTTP 200 را ببینید. وقتی آیکون بی‌نهایت سورین‌فلو در نوار وضعیت هست، برنامه فعال است.

@@ -16,11 +16,28 @@
         android:paddingRight="@dimen/spacing_medium"
         android:paddingBottom="@dimen/spacing_medium">
 
-        <TextView
-            style="@style/AppTheme.SectionHeader"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/label_setup_section" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_sorinflow" />
+
+            <TextView
+                style="@style/AppTheme.SectionHeader"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_small"
+                android:layout_marginLeft="@dimen/spacing_small"
+                android:layout_weight="1"
+                android:text="@string/label_setup_section" />
+
+        </LinearLayout>
 
         <TextView
             style="@style/AppTheme.HelperText"

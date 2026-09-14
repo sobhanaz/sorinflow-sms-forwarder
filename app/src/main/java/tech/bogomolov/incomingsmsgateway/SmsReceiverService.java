@@ -15,7 +15,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
-// Keeps the foreground "F" indicator alive and hosts the heartbeat ping. SMS
+// Keeps the foreground status-bar indicator alive and hosts the heartbeat ping. SMS
 // delivery itself is handled by the manifest-declared SmsBroadcastReceiver (see
 // AndroidManifest.xml / issue #78), so this service no longer registers an SMS
 // receiver at runtime — doing so would double-deliver every message.
@@ -82,7 +82,7 @@ public class SmsReceiverService extends Service {
 
         Notification notification =
                 new Notification.Builder(this, CHANNEL_ID)
-                        .setSmallIcon(R.drawable.ic_f)
+                        .setSmallIcon(R.drawable.ic_notification)
                         .setColor(getColor(R.color.colorPrimary))
                         .setContentTitle(getText(R.string.app_name))
                         .setContentText(getText(R.string.notification_running))
