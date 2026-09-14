@@ -106,5 +106,5 @@ dependencies {
     androidTestImplementation 'androidx.test:rules:1.5.0'
     androidTestImplementation "androidx.work:work-testing:$work_version"
     // Local HTTP server for the end-to-end delivery test.
-    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
+    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:5.5.0'
 }
