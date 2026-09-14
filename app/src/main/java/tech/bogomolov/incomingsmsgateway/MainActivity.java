@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Context context;
     private ListAdapter listAdapter;
+    private StatusCard statusCard;
 
     private static final int PERMISSION_CODE = 0;
 
@@ -104,6 +105,17 @@ public class MainActivity extends AppCompatActivity {
             listAdapter.clear();
             listAdapter.addAll(ForwardingConfig.getAll(this));
         }
+        if (statusCard != null) {
+            statusCard.startWatching();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (statusCard != null) {
+            statusCard.stopWatching();
+        }
     }
 
     @Override
@@ -126,6 +138,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
+
+        if (id == R.id.action_bar_setup) {
+            startActivity(new Intent(this, SetupActivity.class));
+            return true;
+        }
 
         if (id == R.id.action_bar_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
@@ -200,6 +217,13 @@ public class MainActivity extends AppCompatActivity {
         // First-run / empty state: point the user at the + button instead of
         // leaving a blank screen.
         showInfo(configs.isEmpty() ? getString(R.string.empty_list_hint) : "");
+
+        // The SorinFlow status card is a list header, so it must go in before the
+        // adapter; it watches DeliveryStatus for live updates while resumed.
+        if (statusCard == null) {
+            statusCard = StatusCard.attach(this, listview);
+            statusCard.startWatching();
+        }
 
         listAdapter = new ListAdapter(configs, context);
         listview.setAdapter(listAdapter);

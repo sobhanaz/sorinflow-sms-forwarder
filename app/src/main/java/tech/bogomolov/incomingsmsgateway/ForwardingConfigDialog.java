@@ -1,9 +1,8 @@
 package tech.bogomolov.incomingsmsgateway;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.os.Handler;
+import android.os.Looper;
 import android.telephony.SubscriptionManager;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -27,8 +26,6 @@ import java.util.Objects;
 
 public class ForwardingConfigDialog {
 
-    static final public String BROADCAST_KEY = "TEST_RESULT";
-
     final private Context context;
     final private LayoutInflater layoutInflater;
     final private ListAdapter listAdapter;
@@ -37,16 +34,6 @@ public class ForwardingConfigDialog {
         this.context = context;
         this.layoutInflater = layoutInflater;
         this.listAdapter = listAdapter;
-
-        IntentFilter filter = new IntentFilter(BROADCAST_KEY);
-        BroadcastReceiver testResult = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String result = intent.getStringExtra(BROADCAST_KEY);
-                Toast.makeText(context.getApplicationContext(), result, Toast.LENGTH_LONG).show();
-            }
-        };
-        context.registerReceiver(testResult, filter);
     }
 
     public void showNew() {
@@ -136,6 +123,11 @@ public class ForwardingConfigDialog {
 
         final SwitchCompat ignoreSslCheckbox = view.findViewById(R.id.input_ignore_ssl);
         ignoreSslCheckbox.setChecked(config.getIgnoreSsl());
+        // SorinFlow rules are https-only with certificate checks; don't offer to
+        // weaken them here (the option stays for hand-made rules).
+        if (SorinFlowRules.isSorinFlowRule(config)) {
+            ignoreSslCheckbox.setVisibility(View.GONE);
+        }
 
         final SwitchCompat chunkedModeCheckbox = view.findViewById(R.id.input_chunked_mode);
         chunkedModeCheckbox.setChecked(config.getChunkedMode());
@@ -263,8 +255,9 @@ public class ForwardingConfigDialog {
         final EditText signHmacSha256Input = view.findViewById(R.id.id_sign_hmac_sha256_secret);
         String signHmacSha256Secret = signHmacSha256Input.getText().toString();
         // An empty secret can't produce a signature (SecretKeySpec rejects an
-        // empty key), so block it here like the other invalid-form cases.
-        if (signHmacSha256 && signHmacSha256Secret.isEmpty()) {
+        // empty key), so block it here like the other invalid-form cases. SorinFlow
+        // rules sign with the setup secret instead, so they are exempt.
+        if (signHmacSha256 && signHmacSha256Secret.isEmpty() && !SorinFlowRules.isSorinFlowRule(config)) {
             signHmacSha256Input.setError(context.getString(R.string.error_empty_hmac_secret));
             return null;
         }
@@ -367,7 +360,7 @@ public class ForwardingConfigDialog {
             // Guard against a null/empty secret (possible in a hand-edited backup
             // import) — an uncaught exception on this bare thread would kill the
             // whole app, not just the test request.
-            String secret = config.getSignHmacSha256Secret();
+            String secret = SorinFlowRules.resolveSecret(context, config);
             if (config.getSignHmacSha256() && secret != null && !secret.isEmpty()) {
                 request.setSignatureHeader(secret, payload);
             }
@@ -379,9 +372,9 @@ public class ForwardingConfigDialog {
                 result = Request.RESULT_ERROR;
             }
 
-            Intent in = new Intent(BROADCAST_KEY);
-            in.putExtra(BROADCAST_KEY, result);
-            context.sendBroadcast(in);
+            final String toast = result;
+            new Handler(Looper.getMainLooper()).post(() ->
+                    Toast.makeText(context.getApplicationContext(), toast, Toast.LENGTH_LONG).show());
         });
         thread.start();
     }
