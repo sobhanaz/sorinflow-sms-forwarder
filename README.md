@@ -1,35 +1,104 @@
 # SorinFlow Forwarder
 
-An Android app that forwards Divar's one-time-code SMS to a SorinFlow
-server within seconds. It runs on the phone
-that holds the Divar account's SIM; when Divar sends a **contact-info code** or a
-**login code**, the app POSTs it, signed, to `/api/scraper/otp-inbound`, and pings
-`/api/scraper/forwarder-heartbeat` every five minutes so the panel knows the
-phone is alive.
+[![Tests](https://github.com/sobhanaz/sorinflow-sms-forwarder/actions/workflows/tests.yml/badge.svg)](https://github.com/sobhanaz/sorinflow-sms-forwarder/actions/workflows/tests.yml)
+[![Release APK](https://github.com/sobhanaz/sorinflow-sms-forwarder/actions/workflows/release.yml/badge.svg)](https://github.com/sobhanaz/sorinflow-sms-forwarder/actions/workflows/release.yml)
+
+An Android app that forwards Divar's one-time-code SMS to a SorinFlow server
+within seconds. It runs on the phone that holds the Divar account's SIM; when
+Divar sends a **contact-info code** or a **login code**, the app POSTs it,
+signed, to `/api/scraper/otp-inbound`, and pings `/api/scraper/forwarder-heartbeat`
+every five minutes so the SorinFlow panel knows the phone is alive.
+
+<p align="center">
+  <img src="docs/screenshots/01-main-before-setup.png" width="23%" alt="Main screen before setup: the SorinFlow card with the Set up button">
+  <img src="docs/screenshots/02-setup.png" width="23%" alt="Setup screen: server URL, Divar account phone, shared secret">
+  <img src="docs/screenshots/03-main-configured.png" width="23%" alt="Main screen after setup: server reachable, last forwarded code, the two Divar rules">
+  <img src="docs/screenshots/04-main-configured-fa.png" width="23%" alt="The same screen in Persian (right-to-left)">
+</p>
+
+<sub>Screenshots are taken automatically on an Android 11 emulator by the CI
+test suite (`ScreenshotsTest`), so they always show the current build.</sub>
 
 It is a fork of Konstantin Bogomolov's open-source
 [Incoming SMS Gateway](https://github.com/bogkonstantin/android_income_sms_gateway_webhook)
 (MIT). The generic SMS-to-webhook engine, rule editor, backup/import and syslog
 viewer are all still there; the SorinFlow layer sits on top of them.
 
+## Contents
+
+- [Features](#features)
+- [How it works](#how-it-works)
+- [Server contract](#server-contract)
+- [Installing](#installing)
+- [Setup (under two minutes per phone)](#setup-under-two-minutes-per-phone)
+- [The status card](#the-status-card)
+- [Where things are stored](#where-things-are-stored)
+- [Building](#building)
+- [Releases from GitHub Actions](#releases-from-github-actions)
+- [Project layout](#project-layout)
+- [Tests](#tests)
+- [Keeping up with upstream](#keeping-up-with-upstream)
+- [Known limitations and ideas](#known-limitations-and-ideas)
+- [Changelog](#changelog)
+- [License](#license)
+- [راهنمای فارسی](#راهنمای-فارسی)
+
+## Features
+
+- **Fast**: the code is POSTed immediately from the SMS broadcast on a
+  background thread, not through a scheduler; the status card shows the
+  measured delay from SMS arrival to the server's answer for every message.
+- **Deadline-aware retries**: on failure, retries after 5, 10, 20, 30, 30… s and
+  stops 100 s after the SMS arrived. A Divar code older than that is never sent.
+- **Signed requests**: every request carries `X-Signature`, a hex HMAC-SHA-256
+  of the raw body with a shared secret that is entered on the phone and stored
+  encrypted (Android Keystore). It never appears in exports, logs or the APK.
+- **Heartbeat**: a signed ping every five minutes (`account`, `battery`,
+  `network`, `version`), first one five seconds after the service starts.
+- **Status card**: connection identity, server reachability, last forwarded
+  message (kind, masked code, HTTP status, round trip, delay after the SMS),
+  stored failures, and a **Send test to server** button.
+- **Survives aggressive ROMs**: manifest SMS receiver (works even after the
+  service was killed), foreground service of type `specialUse` (no daily runtime
+  limit on Android 14+), the service is restarted on boot and on each SMS.
+- **Hardened**: HTTPS only (cleartext disabled), no backups, service not
+  exported, Android 14 (API 34) target, `minSdk 26`.
+- **Persian and English UI**, right-to-left layout.
+- **Everything upstream still works**: arbitrary forwarding rules with regex
+  filters and JSON templates, HMAC signing, failed-message store, rule
+  export/import, syslog viewer.
+- No cloud service, no account, no analytics.
+
 ## How it works
 
-1. Android delivers the SMS to the app's manifest receiver (this works even
-   when an OEM battery manager has killed the app's service).
+1. Android delivers the SMS to the app's manifest-declared receiver. This is
+   what lets the app work after an OEM battery manager has killed its service:
+   the system cold-starts the process just to deliver the broadcast.
 2. The message is matched against the two rules that setup installed: sender
-   `Divar` plus the text `اطلاعات تماس` (contact code) or `کد تایید` (login code).
-3. The request is sent **immediately on a background thread** (10 s connect /
-   15 s read timeout), not through a scheduler. The status card shows the
-   measured delay between SMS arrival and the server's answer for every
-   message, so you can see the real latency on your network.
+   `Divar` plus the text `اطلاعات تماس` (contact code) or `کد تایید` (login
+   code). Any other rules you add by hand are matched the same way.
+3. The request body is rendered from the rule's JSON template and sent
+   **immediately on a background thread** (10 s connect / 15 s read timeout).
+   The foreground service is (re)started at the same time so the process stays
+   alive for the request.
 4. If that first attempt fails, a WorkManager job (expedited on Android 12+)
-   retries after 5 s, 10 s, 20 s, 30 s, 30 s… and stops 100 s after the SMS was
-   received. A code older than that is never sent; it is stored as failed and
-   shown on the status card.
-5. Every request carries `X-Signature`, a hex HMAC-SHA-256 of the raw body
-   with the shared secret. All traffic is HTTPS; cleartext is disabled.
+   takes over and retries inside one run after 5 s, 10 s, 20 s, 30 s, 30 s…
+   It stops as soon as the next retry would land more than 100 s after the SMS
+   was received, and stores the message as failed.
+5. Every request carries `X-Signature`. All traffic is HTTPS.
 
-Request body sent for a code (the server contract):
+| Stage | Typical timing |
+|---|---|
+| SMS received → rule matched → request sent | a few milliseconds |
+| Server answer on mobile data | well under two seconds; shown per message on the card |
+| Retries after a failure | 5, 10, 20, 30, 30 s after each other, never past 100 s |
+| Heartbeat | 5 s after (re)start, then every 5 min (panel shows *online* if seen within 10 min) |
+
+## Server contract
+
+The app is built to the SorinFlow API and never changes it.
+
+`POST <server>/api/scraper/otp-inbound` for every matched SMS:
 
 ```json
 {"kind":"contact","account":"09123456789","code":"523969","text":"<raw sms>",
@@ -37,19 +106,36 @@ Request body sent for a code (the server contract):
  "battery":83,"network":"mobile"}
 ```
 
-`kind` is `contact` or `login` (the test button sends `test`). `code` is the six
-digits after `Code:`; if the SMS uses another form the server extracts the code
-from `text` itself. Heartbeat body:
-`{"account":"09123456789","battery":83,"network":"wifi","version":"3.0.0"}`.
+- `kind` is `contact` or `login` (the test button sends `test`).
+- `code` is the six digits after `Code:`. If the SMS uses another form the
+  field is empty and the server extracts the code from `text` itself (it also
+  normalises Persian digits).
+- `sentStamp` is the time the SMS was sent, `receivedStamp` the time it reached
+  the phone, both epoch milliseconds. The server refuses a code older than its
+  pending request as `stale_code`, so the real send time is what is sent.
+- `sim` is `sim1`/`sim2` when the slot could be detected, else `undetected`.
+
+`POST <server>/api/scraper/forwarder-heartbeat` every five minutes:
+
+```json
+{"account":"09123456789","battery":83,"network":"wifi","version":"3.0.0"}
+```
+
+Both carry `Content-Type: application/json; charset=utf-8` and
+`X-Signature: <lowercase hex HMAC-SHA-256 of the exact body bytes>`. Answers:
+`200 {"matched":…,"kind":…,"reason":…,"latency_ms":…}`, `401` on a bad
+signature (wrong secret), `429` above roughly 20 requests per minute per IP,
+`503` when the server has no secret configured.
 
 ## Installing
 
 The app is **not on Google Play and cannot be**: Play's SMS permission policy
-does not allow "forward incoming SMS to a URL" apps. Install the APK from the
-releases page or build it yourself (below), then sideload it:
+does not allow "forward incoming SMS to a URL" apps. Download the APK from the
+[Releases](https://github.com/sobhanaz/sorinflow-sms-forwarder/releases) page
+(or build it, see below) and sideload it:
 
 ```bash
-adb install -r app/build/outputs/apk/release/app-release.apk
+adb install -r sorinflow-forwarder-v3.0.0.apk
 ```
 
 or copy the APK to the phone and open it from a file manager.
@@ -97,26 +183,46 @@ service is running.
    * **Divar account phone number**: the number of the SIM in this phone, as
      the Divar account knows it, e.g. `09123456789`. Persian digits are fine.
    * **Shared secret**: the value configured on the server.
-4. Tap **Save**. The app creates the two Divar rules, turns on the heartbeat
-   and starts the service. The settings are stored encrypted (Android
-   Keystore); the secret never appears in the rule list or in an exported
-   backup.
+4. Tap **Save**. The app creates the two Divar rules (visible in the list below
+   the card), turns on the heartbeat and starts the service. Saving again later
+   updates the same two rules instead of adding new ones.
 5. Tap **Send test to server**. Within a couple of seconds a toast shows the
    HTTP status, the round-trip time and the server's answer (`test`), and the
-   card's server line turns to *reachable*. The card also shows the last
-   forwarded message (kind, masked code, HTTP status, round trip, delay after
-   the SMS) and how many messages, if any, are stored as failed. *Retry N
-   failed* re-sends stored messages, except Divar codes older than 100 s,
-   which it discards because they can no longer be used.
-6. Optional: send yourself a Divar code and watch the card update.
+   card's server line turns green.
+6. Optional: request a contact-info code in Divar for this account and watch
+   the card show it as *delivered* with the delay after the SMS.
 
 To clone a configured phone, export the rules from *Settings → Backup*, import
 them on the new phone, and run *Set up* there once (the secret is device-local
 by design).
 
-The ⋮ menu → *Syslog* shows the app's error log from logcat when something
-goes wrong (HTTP 401 means the secret differs from the server's; `stale_code`
-means the code arrived after the server's request had already expired).
+## The status card
+
+| Line | Meaning |
+|---|---|
+| **Account 0912…** | The Divar account this phone forwards for; *Not connected* until setup. |
+| ● **Server reachable · HTTP 200 · 2 min ago** | The last heartbeat or test: green = answered 2xx, red = failed (with the reason, e.g. `http 401` = wrong secret, `SocketTimeoutException` = unreachable), grey = nothing sent yet. |
+| **Last: contact ••••69 · delivered** | The last forwarded SMS: kind, the code with only its last two digits, and *delivered* / *retrying* / *failed*. |
+| **HTTP 200 · 412 ms round trip · 1.3 s after SMS · 14:02:11** | Details of that delivery; the server's `reason` is appended when it sent one (e.g. `stale_code`, `no_pending`). |
+| **N message(s) stored as failed** | Deliveries that gave up. The action bar then offers **Retry N failed**. |
+
+**Retry N failed** re-sends stored messages through the normal retry policy,
+except Divar codes received more than 100 s ago, which it discards because
+Divar would reject them anyway.
+
+The ⋮ menu → **Syslog** shows the app's error log from logcat: HTTP status codes
+of failed requests, invalid regexes, refused service starts.
+
+## Where things are stored
+
+| What | Where | Protection |
+|---|---|---|
+| Server URL, account phone, shared secret | `EncryptedSharedPreferences` file `sorinflow_secure` | AES-256-GCM, key in the Android Keystore; excluded from backups (`allowBackup=false`) |
+| Forwarding rules (including the two Divar rules) | `SharedPreferences` file `phones`, one JSON per rule | The Divar rules carry a *sign with the setup secret* marker, never the secret |
+| Heartbeat settings | `SharedPreferences` file `heartbeat` | — |
+| Last delivery / heartbeat outcome | `SharedPreferences` file `delivery_status` | Codes are stored masked |
+| Failed messages (opt-in per rule, on for Divar rules) | `SharedPreferences` file `failed_messages` | No secret inside; newest 500 kept |
+| Pending retries | WorkManager's database | No secret inside (only the marker) |
 
 ## Building
 
@@ -128,10 +234,21 @@ containing `sdk.dir=/path/to/android-sdk` (git-ignored).
 JAVA_HOME=/path/to/jdk17 ./gradlew assembleDebug        # debug APK
 JAVA_HOME=/path/to/jdk17 ./gradlew testDebugUnitTest    # JVM unit tests
 JAVA_HOME=/path/to/jdk17 ./gradlew connectedAndroidTest # needs a device/emulator
+JAVA_HOME=/path/to/jdk17 ./gradlew assembleRelease      # release APK (signed if a keystore is configured)
 ```
 
-If `dl.google.com` is blocked on your network, the build falls through to a
-mirror of Google's Maven repository declared in `build.gradle`.
+If `dl.google.com` is blocked on your network, Gradle falls through to a
+mirror of Google's Maven repository declared in `build.gradle`. (The SDK
+itself still has to come from Google's servers.)
+
+The server address is not in the source. Pass it at build time to have the
+setup screen pre-filled:
+
+```bash
+SORINFLOW_SERVER_URL=https://your-server ./gradlew assembleRelease
+# or
+./gradlew assembleRelease -PsorinflowServerUrl=https://your-server
+```
 
 ### Signed release APK
 
@@ -166,7 +283,7 @@ Keep the keystore and its password safe: an update signed with a different key
 cannot be installed over the existing app. Bump `versionCode` and
 `versionName` in `app/build.gradle` for every release.
 
-### Releases from GitHub Actions
+## Releases from GitHub Actions
 
 The repository is public, so the server address and the signing material are
 not in the source. They live under *Settings → Secrets and variables → Actions*
@@ -182,21 +299,105 @@ The HMAC shared secret is deliberately **not** among them: anything baked into
 an APK can be extracted, so it is entered on each phone and stored encrypted
 there.
 
-Pushing a tag such as `v3.0.0` builds the signed APK, verifies its signature
-and attaches it to a GitHub Release; *Actions → Release APK → Run workflow*
-builds the same APK as a downloadable artifact without publishing a release.
+- Pushing a tag such as `v3.0.0` builds the signed APK, verifies its signature
+  (the certificate digest is printed in the job log) and attaches it to a
+  GitHub Release.
+- *Actions → Release APK → Run workflow* builds the same APK as a downloadable
+  artifact without publishing a release.
+- The `Tests` workflow runs on every push and pull request: JVM unit tests,
+  then the instrumented suite on an Android 11 emulator. It uploads the test
+  reports and the screenshots used above as artifacts.
+
 A local build without the secrets still works: the release APK is unsigned
 and the server field starts empty.
 
-## Advanced: generic forwarding rules
+## Project layout
 
-Everything the upstream app can do still works: add rules with the **+**
-button for any sender, filter by regex, use custom JSON templates with
-`%from%`, `%text%`, `%sentStamp%`, `%receivedStamp%`, `%sim%`, `%battery%`,
-`%network%`, `%version%` and `%Regex=…%`, sign with HMAC, store failed
-messages, and export/import rules. See the
-[upstream README](https://github.com/bogkonstantin/android_income_sms_gateway_webhook#readme)
-for the template language. Note that this fork is HTTPS-only.
+Java package `tech.bogomolov.incomingsmsgateway` (kept from upstream so merges
+stay easy; the app's identity is the `applicationId` `ir.sorinflow.smsforwarder`).
+
+| Class | Role |
+|---|---|
+| `SmsBroadcastReceiver` | Manifest receiver: rebuilds the SMS, matches rules (sender, regex filter, SIM), hands the request to `DirectDelivery`. |
+| `DirectDelivery` | Immediate attempt on a background thread; restarts the service; falls back to `RequestWorker` only on a retryable failure. |
+| `RequestWorker` | WorkManager worker. `attempt()` is the single HTTP-attempt routine; with a deadline it loops on `RetrySchedule`, otherwise upstream's exponential backoff. |
+| `RetrySchedule` | The 5/10/20/30/30 s ladder and the 100 s cutoff (pure functions). |
+| `Request` | `HttpURLConnection` wrapper: timeouts, HMAC header, response body, elapsed time, result classification. |
+| `SorinFlowSettings` | Server URL, account, secret in `EncryptedSharedPreferences`. |
+| `SorinFlowRules` | Builds/installs the two Divar rules and the heartbeat; URL validation; secret resolution. |
+| `SorinFlowClient` | Signed heartbeat and the `kind:test` request. |
+| `OtpCodes` | Persian/Arabic digit normalisation, code extraction, masking, phone normalisation. |
+| `DeliveryStatus` | Last message / heartbeat outcome for the status card. |
+| `StatusCard`, `SetupActivity` | The card at the top of the main screen and the three-field setup form. |
+| `SmsReceiverService` | Foreground service (`specialUse`): keeps the process alive, runs the heartbeat thread. |
+| `ForwardingConfig`, `ForwardingConfigDialog`, `ListAdapter`, `MainActivity`, `SettingsActivity`, `FailedMessage`, `HeartbeatSettings`, `DeviceInfo` | Upstream's engine and UI: rule model and template placeholders, rule editor, list, backup/import, failed store. |
+
+`CLAUDE.md` describes the architecture and conventions in more depth.
+
+## Tests
+
+- **JVM unit tests** (`app/src/test`, `./gradlew testDebugUnitTest`): template
+  rendering and placeholders, HMAC vectors, sender/filter matching, the retry
+  ladder and cutoff, digit extraction, the rule builder against the server
+  contract, URL validation.
+- **Instrumented tests** (`app/src/androidTest`, device or emulator): rule and
+  settings persistence (including that the encrypted store holds no plain
+  secret and that re-running setup updates rather than duplicates), the
+  failed-message store, WorkManager delivery against a public HTTP test
+  service, Espresso form validation of the rule editor, settings and setup
+  screens, and `ScreenshotsTest`, which renders the screens shown above.
+
+The Espresso tests deliberately never take the path that starts the foreground
+service. Emulator runs are occasionally flaky on GitHub's two-core runners;
+re-running the job is enough.
+
+## Keeping up with upstream
+
+```bash
+git remote add upstream https://github.com/bogkonstantin/android_income_sms_gateway_webhook  # once
+git fetch upstream
+git merge upstream/master
+```
+
+The upstream file structure and Java package were kept for this reason; the
+SorinFlow layer lives in separate classes (`SorinFlow*`, `DirectDelivery`,
+`RetrySchedule`, `OtpCodes`, `DeliveryStatus`, `StatusCard`) and touches
+upstream files only where the delivery path had to change.
+
+## Known limitations and ideas
+
+- The retry ladder holds one WorkManager thread while it waits; fine for
+  one-code-at-a-time traffic. If several phones' worth of codes ever flow
+  through one device, give WorkManager a larger executor.
+- A code that arrives while the phone has no data connection at all is stored
+  as failed after 100 s; the panel sees the gap through the missing heartbeat.
+- SIM slot detection is heuristic (OEM-specific extras); `sim` may read
+  `undetected` on some phones. Nothing depends on it.
+- Possible next steps: a "last 20 deliveries" log screen, a notification when a
+  delivery fails, a QR code on the SorinFlow panel that fills the setup form,
+  an in-app switch between light/dark/system theme, and Play-style themed
+  icons on older launchers.
+
+## Changelog
+
+### 3.0.0 (fork of upstream 2.4.0)
+
+- SorinFlow layer: setup screen, encrypted settings, the two Divar rules,
+  signed heartbeat, status card with a test button, Persian translation.
+- Delivery: immediate send from the receiver, deadline-bound retry ladder,
+  stale codes never sent, timeouts on every request, response body and
+  timing captured for the card.
+- Platform: `targetSdk 34`, `minSdk 26`, foreground service type `specialUse`,
+  runtime broadcast receiver removed, cleartext and backups disabled,
+  dependencies updated (AppCompat 1.7, Material 1.12, WorkManager 2.9.1).
+- Branding: new vector launcher icon and status-bar icon from the SorinFlow
+  mark, brand palette in light and dark mode.
+- Build: server address from a build-time secret, external keystore signing,
+  release and test workflows with screenshots, Google Maven mirror fallback.
+- Fixed from upstream: the Russian locale renamed the rule store file (rules
+  vanished when the phone language was Russian); `Request` could throw on a
+  malformed URL; the heartbeat thread could crash when settings changed
+  mid-ping; `org.apache.http` legacy class removed from the ignore-SSL path.
 
 ## License
 
@@ -205,23 +406,36 @@ MIT. Copyright (c) 2021 Konstantin Bogomolov (upstream), SorinFlow additions
 
 ---
 
-## راهنمای سریع (فارسی)
+## راهنمای فارسی
 
 این برنامه کدهای پیامکی دیوار («کد امنیتی دریافت اطلاعات تماس» و «کد تایید») را
 در چند ثانیه به سرور سورین‌فلو می‌فرستد. روی گوشی‌ای نصب می‌شود که سیم‌کارت
-حساب دیوار در آن است.
+حساب دیوار در آن است. هر پنج دقیقه هم یک «ضربان» به سرور می‌فرستد تا پنل بداند
+گوشی روشن و متصل است.
 
-**نصب:** فایل APK را با `adb install` یا از فایل‌منیجر نصب کنید. هشدار Play
-Protect را با «به هر حال نصب شود» رد کنید (هشدار اشتباه است؛ برنامه فقط به
-سروری که خودتان وارد می‌کنید پیام می‌فرستد).
+**نصب:** فایل APK را از صفحهٔ Releases بگیرید و با `adb install` یا از
+فایل‌منیجر نصب کنید. هشدار Play Protect را با «به هر حال نصب شود» رد کنید
+(هشدار اشتباه است؛ برنامه فقط به سروری که خودتان وارد می‌کنید پیام می‌فرستد).
 
 **شیائومی / HyperOS:** در تنظیمات برنامه، «Allow restricted settings» را بزنید،
 دسترسی پیامک و اعلان را بدهید، «Battery saver» را روی «No restrictions» بگذارید،
 «Autostart» را روشن کنید، برنامه را در فهرست برنامه‌های اخیر قفل کنید، گزینهٔ
 «Pause app activity if unused» را خاموش کنید و در Google Messages گزینهٔ RCS را
-غیرفعال کنید.
+غیرفعال کنید. بهتر است گوشی همیشه به شارژر وصل باشد.
 
 **راه‌اندازی:** برنامه را باز کنید، دسترسی‌ها را بدهید، روی «راه‌اندازی» بزنید،
 آدرس سرور (در نسخه‌های رسمی از قبل پر شده است)، شمارهٔ موبایل حساب دیوار و
-کلید محرمانه را وارد کنید و ذخیره کنید. سپس «ارسال آزمایشی به سرور» را بزنید؛ باید پاسخ
-HTTP 200 را ببینید. وقتی آیکون بی‌نهایت سورین‌فلو در نوار وضعیت هست، برنامه فعال است.
+کلید محرمانه را وارد کنید و ذخیره کنید. سپس «ارسال آزمایشی به سرور» را بزنید؛
+باید پاسخ HTTP 200 را ببینید و نقطهٔ کنار «سرور» سبز شود. وقتی آیکون بی‌نهایت
+سورین‌فلو در نوار وضعیت هست، برنامه فعال است.
+
+**کارت وضعیت:** خط «سرور» نتیجهٔ آخرین ضربان یا آزمایش را نشان می‌دهد (سبز =
+در دسترس، قرمز = ناموفق با دلیل، مثلاً `http 401` یعنی کلید محرمانه با سرور
+یکی نیست). خط «آخرین» آخرین پیامک ارسال‌شده را با نوع کد، دو رقم آخر کد، وضعیت
+تحویل، کد HTTP، زمان رفت‌وبرگشت و فاصلهٔ زمانی از رسیدن پیامک نشان می‌دهد.
+پیام‌های ناموفق شمرده می‌شوند و با «تلاش مجدد» دوباره فرستاده می‌شوند، به‌جز
+کدهای دیوار قدیمی‌تر از ۱۰۰ ثانیه که چون دیگر معتبر نیستند دور ریخته می‌شوند.
+
+**رفع اشکال:** از منوی ⋮ گزینهٔ «گزارش سیستم» خطاهای برنامه را نشان می‌دهد.
+اگر کدها بعد از چند ساعت دیگر نمی‌رسند، تنظیمات باتری و Autostart را دوباره
+بررسی کنید.

@@ -8,9 +8,10 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 import android.Manifest;
+import android.app.UiAutomation;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.os.Build;
+import android.os.ParcelFileDescriptor;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.os.LocaleListCompat;
@@ -18,7 +19,6 @@ import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.GrantPermissionRule;
-import androidx.test.runner.screenshot.Screenshot;
 
 import org.junit.After;
 import org.junit.Before;
@@ -26,14 +26,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 
 /**
- * Renders the app's screens in known states and saves PNG screenshots under the
- * app's external files dir ({@code Android/data/<applicationId>/files/screenshots}),
+ * Renders the app's screens in known states and saves PNG screenshots to
+ * {@code /sdcard/Download/sorinflow-screenshots} via the shell's {@code screencap}
+ * (the app's own directories are wiped when Gradle uninstalls it after the run),
  * which CI pulls into an artifact for the README. It doubles as a smoke test of
  * {@link StatusCard#bind()} with seeded data: the configured account must show on
  * the card. Nothing here starts the foreground service.
@@ -43,6 +42,7 @@ public class ScreenshotsTest {
 
     private static final String SERVER = "https://sorinflow.example";
     private static final String ACCOUNT = "09123456789";
+    private static final String SCREENSHOT_DIR = "/sdcard/Download/sorinflow-screenshots";
 
     private final Context context =
             InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -148,16 +148,25 @@ public class ScreenshotsTest {
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     }
 
+    // The shell user can run screencap and write to Download; the test app cannot
+    // write there itself under scoped storage.
     private void capture(String name) {
-        Bitmap bitmap = Screenshot.capture().getBitmap();
-        File dir = new File(context.getExternalFilesDir(null), "screenshots");
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw new IllegalStateException("cannot create " + dir);
-        }
-        try (OutputStream out = new FileOutputStream(new File(dir, name + ".png"))) {
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        shell("mkdir -p " + SCREENSHOT_DIR);
+        shell("screencap -p " + SCREENSHOT_DIR + "/" + name + ".png");
+    }
+
+    private static void shell(String command) {
+        UiAutomation automation = InstrumentationRegistry.getInstrumentation().getUiAutomation();
+        ParcelFileDescriptor fd = automation.executeShellCommand(command);
+        // Drain the output so the command has finished before we move on.
+        try (InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(fd)) {
+            byte[] buffer = new byte[4096];
+            while (in.read(buffer) != -1) {
+                // discard
+            }
         } catch (IOException e) {
-            throw new IllegalStateException("cannot write screenshot " + name, e);
+            throw new IllegalStateException("shell command failed: " + command, e);
         }
     }
 }

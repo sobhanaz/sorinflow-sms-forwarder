@@ -67,7 +67,7 @@ jobs:
           # the emulator is still up, whatever the test outcome.
           script: |
             ./gradlew connectedDebugAndroidTest; status=$?
-            adb pull /sdcard/Android/data/ir.sorinflow.smsforwarder/files/screenshots screenshots || echo "no screenshots to pull"
+            adb pull /sdcard/Download/sorinflow-screenshots screenshots || echo "no screenshots to pull"
             exit $status
 
       - name: Upload app screenshots
