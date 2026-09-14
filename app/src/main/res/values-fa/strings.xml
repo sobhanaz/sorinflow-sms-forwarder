@@ -131,4 +131,11 @@
     <string name="device_id_hint">با کد QR پر می‌شود. با آن، سرور کلید مخصوص همین گوشی را بررسی می‌کند و می‌تواند فقط همین گوشی را لغو کند.</string>
     <string name="rule_name_contact">دیوار · کد اطلاعات تماس</string>
     <string name="rule_name_login">دیوار · کد ورود</string>
+    <string name="menu_keepalive_guide">تنظیمات گوشی (زنده ماندن برنامه)</string>
+    <string name="status_oem_hint">شیائومی/HyperOS: «Autostart» و باتری «بدون محدودیت» باید روشن باشند.</string>
+    <string name="btn_phone_settings">تنظیمات گوشی</string>
+    <string name="btn_battery_settings">باتری</string>
+    <string name="btn_autostart">Autostart</string>
+    <string name="keepalive_guide_title">زنده نگه‌داشتن برنامه</string>
+    <string name="keepalive_guide_message">رام این گوشی برنامه‌های پس‌زمینه را می‌بندد مگر این‌که یک بار اجازه بدهید. هیچ برنامه‌ای نمی‌تواند این‌ها را خودش روشن کند:\n\n۱. باتری ← SorinFlow Forwarder ← بدون محدودیت.\n۲. Autostart ← SorinFlow Forwarder را روشن کنید.\n۳. در برنامه‌های اخیر، کارت برنامه را نگه دارید و قفل را بزنید.\n۴. Google Messages ← RCS chats ← خاموش.\n\nخود برنامه به‌صورت سرویس پیش‌زمینه اجرا می‌شود، بعد از روشن شدن گوشی و هر ۱۵ دقیقه دوباره راه می‌افتد و از اندروید معافیت بهینه‌سازی باتری می‌خواهد.</string>
 </resources>

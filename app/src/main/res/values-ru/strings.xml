@@ -131,4 +131,11 @@
     <string name="device_id_hint">Заполняется из QR-кода. С ним сервер проверяет секрет именно этого телефона и может отозвать только его.</string>
     <string name="rule_name_contact">Divar · код для контактов</string>
     <string name="rule_name_login">Divar · код входа</string>
+    <string name="menu_keepalive_guide">Настройки телефона (не выгружать)</string>
+    <string name="status_oem_hint">Xiaomi/HyperOS: включите «Автозапуск» и батарея «Без ограничений».</string>
+    <string name="btn_phone_settings">Настройки телефона</string>
+    <string name="btn_battery_settings">Батарея</string>
+    <string name="btn_autostart">Автозапуск</string>
+    <string name="keepalive_guide_title">Чтобы телефон не выгружал приложение</string>
+    <string name="keepalive_guide_message">Прошивка останавливает фоновые приложения, пока вы один раз не разрешите. Само приложение это переключить не может:\n\n1. Батарея → SorinFlow Forwarder → Без ограничений.\n2. Автозапуск → включить SorinFlow Forwarder.\n3. В списке недавних приложений удерживайте карточку и нажмите замок.\n4. Google Messages → RCS-чаты → выключить.\n\nПриложение уже работает как foreground-сервис, перезапускается при загрузке и каждые 15 минут и просит исключение из оптимизации батареи Android.</string>
 </resources>

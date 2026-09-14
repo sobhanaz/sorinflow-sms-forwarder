@@ -131,4 +131,11 @@
     <string name="device_id_hint">Filled by the QR code. With it the server checks this phone\'s own secret and can revoke just this phone.</string>
     <string name="rule_name_contact">Divar · contact-info code</string>
     <string name="rule_name_login">Divar · login code</string>
+    <string name="menu_keepalive_guide">Phone settings (keep alive)</string>
+    <string name="status_oem_hint">Xiaomi/HyperOS: Autostart and Battery «No restrictions» must be on.</string>
+    <string name="btn_phone_settings">Phone settings</string>
+    <string name="btn_battery_settings">Battery</string>
+    <string name="btn_autostart">Autostart</string>
+    <string name="keepalive_guide_title">Keep the forwarder alive</string>
+    <string name="keepalive_guide_message">This phone\'s ROM stops background apps unless you allow it once. No app can switch these itself:\n\n1. Battery → SorinFlow Forwarder → No restrictions.\n2. Autostart → enable SorinFlow Forwarder.\n3. In Recents, long-press the app card and tap the lock.\n4. Google Messages → RCS chats → off.\n\nThe app already runs as a foreground service, restarts on boot and every 15 minutes, and asks for Android\'s battery-optimisation exemption.</string>
 </resources>

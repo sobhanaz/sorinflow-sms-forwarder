@@ -52,6 +52,9 @@ final class StatusCard {
                 v -> activity.startActivity(new Intent(activity, SetupActivity.class)));
         view.findViewById(R.id.btn_send_test).setOnClickListener(v -> card.sendTest());
         view.findViewById(R.id.btn_allow_background).setOnClickListener(v -> card.requestBatteryExemption());
+        view.findViewById(R.id.btn_phone_settings).setOnClickListener(v -> KeepAliveGuide.show(activity));
+        view.findViewById(R.id.status_oem_row)
+                .setVisibility(KeepAliveGuide.isXiaomi() ? View.VISIBLE : View.GONE);
         View.OnClickListener openLog = v ->
                 activity.startActivity(new Intent(activity, DeliveryLogActivity.class));
         view.findViewById(R.id.status_last).setOnClickListener(openLog);

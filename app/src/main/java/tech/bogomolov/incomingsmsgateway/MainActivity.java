@@ -155,6 +155,11 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+        if (id == R.id.action_bar_keepalive) {
+            KeepAliveGuide.show(this);
+            return true;
+        }
+
         if (id == R.id.action_bar_retry_failed) {
             int count = FailedMessage.getCount(this);
             FailedMessage.retryAll(this);

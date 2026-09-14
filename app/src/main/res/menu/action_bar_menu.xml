@@ -23,6 +23,11 @@
         app:showAsAction="never"
         />
     <item
+        android:id="@+id/action_bar_keepalive"
+        android:title="@string/menu_keepalive_guide"
+        app:showAsAction="never"
+        />
+    <item
         android:id="@+id/action_bar_syslogs"
         android:title="@string/menu_syslog"
         app:showAsAction="never"
