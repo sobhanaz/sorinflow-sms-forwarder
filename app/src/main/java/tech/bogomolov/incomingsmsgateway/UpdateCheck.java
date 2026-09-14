@@ -106,10 +106,12 @@ public final class UpdateCheck {
         if (v.startsWith("v") || v.startsWith("V")) {
             v = v.substring(1);
         }
-        // Drop a pre-release/build suffix such as "-beta1".
-        int dash = v.indexOf('-');
-        if (dash >= 0) {
-            v = v.substring(0, dash);
+        // Drop a pre-release or build suffix such as "-beta1" or "+main.42".
+        for (char separator : new char[]{'-', '+'}) {
+            int cut = v.indexOf(separator);
+            if (cut >= 0) {
+                v = v.substring(0, cut);
+            }
         }
         String[] parts = v.split("\\.");
         int[] numbers = new int[parts.length];

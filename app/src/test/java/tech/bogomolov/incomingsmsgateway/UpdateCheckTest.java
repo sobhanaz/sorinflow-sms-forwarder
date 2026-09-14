@@ -26,6 +26,9 @@ public class UpdateCheckTest {
     @Test
     public void preReleaseSuffixIsIgnoredAndGarbageIsNotNewer() {
         assertTrue(UpdateCheck.isNewer("v3.1.0-beta1", "3.0.0"));
+        // Rolling CI builds are versioned "3.1.0+main.42": same release, not older.
+        assertFalse(UpdateCheck.isNewer("v3.1.0", "3.1.0+main.42"));
+        assertTrue(UpdateCheck.isNewer("v3.2.0", "3.1.0+main.42"));
         assertFalse(UpdateCheck.isNewer("latest", "3.0.0"));
         assertFalse(UpdateCheck.isNewer("", "3.0.0"));
         assertFalse(UpdateCheck.isNewer(null, "3.0.0"));

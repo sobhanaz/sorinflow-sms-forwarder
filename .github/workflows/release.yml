@@ -5,23 +5,44 @@ name: Release APK
 #   SORINFLOW_SERVER_URL          server address baked into the build
 #   SORINFLOW_KEYSTORE_BASE64     base64 of the release keystore (.jks)
 #   SORINFLOW_KEYSTORE_PASSWORD, SORINFLOW_KEY_ALIAS, SORINFLOW_KEY_PASSWORD
-# A tag push (v*) also attaches the APK to a GitHub Release; a manual run only
-# uploads it as a workflow artifact.
+#
+# Three ways in:
+#   * a tag push (v*)      -> versioned GitHub Release with the APK attached;
+#   * the Tests workflow finishing green on main -> the "latest" tag is moved
+#     to that commit and the rolling "Latest build (main)" pre-release gets the
+#     fresh APK, so every change that passes the suite is downloadable;
+#   * a manual run          -> APK as a workflow artifact only.
 
 on:
   push:
     tags: [ 'v*' ]
+  workflow_run:
+    workflows: [ "Tests" ]
+    types: [ completed ]
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Signed release build
+    # Rolling builds only after the test suite passed.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    env:
+      BUILD_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      ROLLING: ${{ github.event_name == 'workflow_run' }}
+      VERSIONED: ${{ startsWith(github.ref, 'refs/tags/v') }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -54,14 +75,24 @@ jobs:
           SORINFLOW_SERVER_URL: ${{ secrets.SORINFLOW_SERVER_URL }}
         run: |
           test -n "$SORINFLOW_SERVER_URL" || echo "::warning::SORINFLOW_SERVER_URL secret is not set; the setup screen will start empty"
-          ./gradlew assembleRelease
+          if [ "$ROLLING" = "true" ]; then
+            # Rolling builds carry the build number in the version name so a
+            # phone's heartbeat says exactly which build it runs.
+            ./gradlew assembleRelease -PsorinflowVersionSuffix="+main.${GITHUB_RUN_NUMBER}"
+          else
+            ./gradlew assembleRelease
+          fi
 
       - name: Verify the signature and name the APK
         run: |
           APK=app/build/outputs/apk/release/app-release.apk
           APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
           "$APKSIGNER" verify --print-certs "$APK"
-          cp "$APK" "sorinflow-forwarder-${GITHUB_REF_NAME}.apk"
+          if [ "$ROLLING" = "true" ]; then
+            cp "$APK" sorinflow-forwarder-latest.apk
+          else
+            cp "$APK" "sorinflow-forwarder-${GITHUB_REF_NAME}.apk"
+          fi
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -69,8 +100,31 @@ jobs:
           name: sorinflow-forwarder-apk
           path: sorinflow-forwarder-*.apk
 
-      - name: Attach the APK to the GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Attach the APK to the versioned GitHub Release
+        if: env.VERSIONED == 'true'
         uses: softprops/action-gh-release@v2
         with:
           files: sorinflow-forwarder-*.apk
+
+      - name: Move the latest tag to this commit
+        if: env.ROLLING == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -f latest "$BUILD_SHA"
+          git push -f origin refs/tags/latest
+
+      - name: Refresh the rolling pre-release
+        if: env.ROLLING == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest build (main)
+          prerelease: true
+          files: sorinflow-forwarder-latest.apk
+          body: |
+            Automatic signed build of `main` at ${{ github.event.workflow_run.head_sha }}
+            (build #${{ github.run_number }}), refreshed on every change that passes the
+            test suite. Install with `adb install -r sorinflow-forwarder-latest.apk`
+            or `scripts/install-latest.sh`. The versioned releases are the ones the
+            app's own update check offers.

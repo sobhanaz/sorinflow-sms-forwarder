@@ -397,6 +397,12 @@ there.
 - Pushing a tag such as `v3.0.0` builds the signed APK, verifies its signature
   (the certificate digest is printed in the job log) and attaches it to a
   GitHub Release.
+- **Every change that passes the test suite on `main`** also produces a signed
+  build: the workflow moves the `latest` tag to that commit and refreshes the
+  *Latest build (main)* pre-release with `sorinflow-forwarder-latest.apk`
+  (version name `3.1.0+main.<build>`). `scripts/install-latest.sh` downloads
+  it and installs it on the phone attached via adb; `scripts/install-latest.sh v3.1.0`
+  does the same for a versioned release.
 - *Actions → Release APK → Run workflow* builds the same APK as a downloadable
   artifact without publishing a release.
 - The `Tests` workflow runs on every push and pull request: JVM unit tests,
