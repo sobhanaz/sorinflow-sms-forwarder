@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -97,6 +98,13 @@
             android:name=".DeliveryLogActivity"
             android:exported="false"
             android:label="@string/title_delivery_log" />
+
+        <!-- The ZXing scan screen is landscape by default; keep it portrait like
+             the rest of the app (the library documents this override). -->
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="portrait"
+            tools:replace="screenOrientation" />
 
         <activity
             android:name=".SettingsActivity"
