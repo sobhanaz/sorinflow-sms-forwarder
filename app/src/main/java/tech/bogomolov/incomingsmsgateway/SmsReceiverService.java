@@ -136,17 +136,21 @@ public class SmsReceiverService extends Service {
 
         heartbeatThread = new HandlerThread("HeartbeatThread");
         heartbeatThread.start();
-        heartbeatHandler = new Handler(heartbeatThread.getLooper());
+        // The runnable keeps its own reference: stopHeartbeat() nulls the field
+        // from the main thread while a ping may still be in flight, and posting
+        // to a quit looper is a logged no-op rather than an NPE.
+        final Handler handler = new Handler(heartbeatThread.getLooper());
+        heartbeatHandler = handler;
 
         heartbeatRunnable = new Runnable() {
             @Override
             public void run() {
                 sendHeartbeat(url);
-                heartbeatHandler.postDelayed(this, interval);
+                handler.postDelayed(this, interval);
             }
         };
 
-        heartbeatHandler.postDelayed(heartbeatRunnable, FIRST_HEARTBEAT_DELAY_MS);
+        handler.postDelayed(heartbeatRunnable, FIRST_HEARTBEAT_DELAY_MS);
     }
 
     private void stopHeartbeat() {

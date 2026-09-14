@@ -53,17 +53,21 @@ public final class SorinFlowClient {
         return request.getResult();
     }
 
-    /** Posts a kind:"test" payload on a background thread; the callback runs on the main thread. */
+    /**
+     * Posts a kind:"test" payload on a background thread; the callback runs on the
+     * main thread. The outcome is recorded as the server-reachability result (the
+     * card's "server" line), not as a forwarded message, so the last real Divar
+     * delivery stays visible.
+     */
     public static void sendTest(Context context, Callback callback) {
         final Context app = context.getApplicationContext();
         final Handler main = new Handler(Looper.getMainLooper());
         new Thread(() -> {
             SorinFlowSettings settings = SorinFlowSettings.load(app);
-            long started = System.currentTimeMillis();
             String body = testBody(app, settings);
             Request request = post(SorinFlowRules.otpUrl(settings.getBaseUrl()), body,
                     settings.getSecret(), DirectDelivery.CONNECT_TIMEOUT_MS, DirectDelivery.READ_TIMEOUT_MS);
-            DeliveryStatus.recordMessage(app, body, started, request, request.getResult());
+            DeliveryStatus.recordHeartbeat(app, request, request.getResult());
             main.post(() -> callback.onResult(request, request.getResult()));
         }, "SorinFlowTest").start();
     }

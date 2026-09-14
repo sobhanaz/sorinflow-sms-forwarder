@@ -40,4 +40,9 @@ public final class RetrySchedule {
     public static boolean isExpired(long now, long deadline) {
         return now > deadline;
     }
+
+    /** True when a code received at receivedStamp is past its window; an unknown (0) stamp is never stale. */
+    public static boolean isPastDeadline(long receivedStamp, long now) {
+        return receivedStamp > 0L && isExpired(now, deadlineFor(receivedStamp));
+    }
 }

@@ -68,4 +68,14 @@ public class RetryScheduleTest {
         assertFalse(RetrySchedule.isExpired(100_000L, 100_000L));
         assertTrue(RetrySchedule.isExpired(100_001L, 100_000L));
     }
+
+    @Test
+    public void storedCodeIsStaleOnlyAfterItsWindow() {
+        long now = 1_700_000_000_000L;
+        assertFalse(RetrySchedule.isPastDeadline(now - 50_000L, now));
+        assertFalse(RetrySchedule.isPastDeadline(now - 100_000L, now));
+        assertTrue(RetrySchedule.isPastDeadline(now - 100_001L, now));
+        // Unknown receive time (legacy stored entry): keep it.
+        assertFalse(RetrySchedule.isPastDeadline(0L, now));
+    }
 }

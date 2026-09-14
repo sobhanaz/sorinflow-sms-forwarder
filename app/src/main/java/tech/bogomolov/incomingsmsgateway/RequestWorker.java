@@ -118,6 +118,9 @@ public class RequestWorker extends Worker {
     // ladder inside this single run: WorkManager's backoff has a 10 s minimum plus
     // unpredictable scheduling latency, which cannot honour a 100 s cutoff. Once
     // the deadline passes the code is useless, so it is stored as failed, never sent.
+    // ponytail: the sleeps hold one WorkManager pool thread (2-4 threads) for up
+    // to ~95 s; fine for one-code-at-a-time OTP traffic. If concurrent deliveries
+    // ever matter, provide a WorkManager Configuration with a larger executor.
     private Result deliverBeforeDeadline(Data input, long deadline, boolean storeFailed) {
         for (int retry = 0; ; retry++) {
             if (RetrySchedule.isExpired(System.currentTimeMillis(), deadline)) {

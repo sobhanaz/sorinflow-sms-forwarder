@@ -100,10 +100,12 @@ running.
    Keystore); the secret never appears in the rule list or in an exported
    backup.
 5. Tap **Send test to server**. Within a couple of seconds a toast shows the
-   HTTP status, the round-trip time and the server's answer (`test`). The
-   status card then shows the last heartbeat, the last forwarded message
-   (kind, masked code, HTTP status, round trip, delay after the SMS) and how
-   many messages, if any, are stored as failed.
+   HTTP status, the round-trip time and the server's answer (`test`), and the
+   card's server line turns to *reachable*. The card also shows the last
+   forwarded message (kind, masked code, HTTP status, round trip, delay after
+   the SMS) and how many messages, if any, are stored as failed. *Retry N
+   failed* re-sends stored messages, except Divar codes older than 100 s,
+   which it discards because they can no longer be used.
 6. Optional: send yourself a Divar code and watch the card update.
 
 To clone a configured phone, export the rules from *Settings → Backup*, import

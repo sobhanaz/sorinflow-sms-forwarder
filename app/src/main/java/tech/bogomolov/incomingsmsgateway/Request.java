@@ -85,6 +85,9 @@ public class Request {
     }
 
     public void setJsonHeaders(String headers) {
+        if (this.connection == null) {
+            return; // constructor already recorded the error
+        }
         JSONObject headersObj;
         try {
             headersObj = new JSONObject(headers);
@@ -124,6 +127,9 @@ public class Request {
     }
 
     public void setSignatureHeader(@NonNull String secret, @NonNull String body) {
+        if (this.connection == null) {
+            return; // constructor already recorded the error
+        }
         try {
             this.connection.setRequestProperty("X-Signature", computeHmacSha256Hex(secret, body));
         } catch (NoSuchAlgorithmException | InvalidKeyException | IllegalArgumentException e) {

@@ -77,6 +77,16 @@ public class FailedMessage {
         List<Data> messages = getAll(context);
         clear(context);
         for (Data data : messages) {
+            // A one-time code (SorinFlow delivery) past its 100 s window is dropped,
+            // never re-sent: Divar has long rejected it and the server would only
+            // answer stale_code.
+            if (data.getBoolean(RequestWorker.DATA_SIGN_WITH_SETUP_SECRET, false)
+                    && RetrySchedule.isPastDeadline(
+                            data.getLong(RequestWorker.DATA_RECEIVED_STAMP, 0L),
+                            System.currentTimeMillis())) {
+                Log.i("FailedMessage", "dropping stale one-time code instead of re-sending");
+                continue;
+            }
             RequestWorker.enqueue(context, data);
         }
     }
