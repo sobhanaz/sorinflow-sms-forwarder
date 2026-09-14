@@ -105,4 +105,26 @@
     <string name="test_sending">Отправляем тест…</string>
     <string name="test_result_ok">Сервер ответил HTTP %1$d за %2$d мс (%3$s)</string>
     <string name="test_result_fail">Тест не прошёл: %s</string>
+    <!-- Delivery log, alerts, dual SIM, QR setup, keepalive, updates (3.1.0) -->
+    <string name="title_delivery_log">Журнал доставки</string>
+    <string name="menu_delivery_log">Журнал доставки</string>
+    <string name="log_empty">Попыток доставки ещё не было</string>
+    <string name="log_row_title">%1$s %2$s · %3$s</string>
+    <string name="log_row_detail">%1$s · HTTP %2$d · %3$d мс · %4$s после SMS</string>
+    <string name="alerts_channel">Предупреждения</string>
+    <string name="alert_delivery_failed_title">Код Divar не доставлен</string>
+    <string name="alert_delivery_failed_text">%1$s · %2$s</string>
+    <string name="alert_server_title">Сервер SorinFlow недоступен</string>
+    <string name="alert_server_text">Нет успешного heartbeat уже %1$d мин · %2$s</string>
+    <string name="label_account_phone2">Аккаунт Divar для SIM 2 (необязательно)</string>
+    <string name="account_phone2_hint">Только для телефонов с двумя SIM: аккаунт, чья SIM-карта стоит во втором слоте</string>
+    <string name="status_accounts_two">SIM 1: %1$s · SIM 2: %2$s</string>
+    <string name="btn_scan_qr">Сканировать QR</string>
+    <string name="scan_qr_prompt">Отсканируйте QR-код настройки из панели SorinFlow</string>
+    <string name="setup_payload_applied">Настройки заполнены из кода. Проверьте их и нажмите «Сохранить».</string>
+    <string name="setup_payload_invalid">Это не код настройки SorinFlow</string>
+    <string name="status_battery_restricted">Включена оптимизация батареи: Android может задерживать или останавливать пересылку.</string>
+    <string name="btn_allow_background">Разрешить фон</string>
+    <string name="status_update_available">Доступно обновление: %s</string>
+    <string name="btn_update">Скачать</string>
 </resources>

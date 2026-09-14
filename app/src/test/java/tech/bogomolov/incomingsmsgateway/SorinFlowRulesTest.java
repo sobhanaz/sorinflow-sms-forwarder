@@ -61,6 +61,32 @@ public class SorinFlowRulesTest {
     }
 
     @Test
+    public void twoAccountsGiveFourSlotBoundRules() throws Exception {
+        SorinFlowSettings dual = new SorinFlowSettings("https://sorinflow.example", "09123456789",
+                "09351234567", "s3cret");
+
+        List<ForwardingConfig> rules = SorinFlowRules.buildRules(null, dual);
+
+        assertEquals(4, rules.size());
+        assertEquals(SorinFlowRules.KEY_CONTACT, rules.get(0).getKey());
+        assertEquals(1, rules.get(0).getSimSlot());
+        assertEquals(SorinFlowRules.KEY_LOGIN, rules.get(1).getKey());
+        assertEquals(1, rules.get(1).getSimSlot());
+        assertEquals(SorinFlowRules.KEY_CONTACT_SIM2, rules.get(2).getKey());
+        assertEquals(2, rules.get(2).getSimSlot());
+        assertEquals(SorinFlowRules.KEY_LOGIN_SIM2, rules.get(3).getKey());
+        assertEquals(2, rules.get(3).getSimSlot());
+        for (ForwardingConfig rule : rules) {
+            assertTrue(SorinFlowRules.isSorinFlowRule(rule));
+        }
+
+        JSONObject sim1 = new JSONObject(rules.get(0).prepareMessage("Divar", CONTACT_SMS, "sim1", 1L));
+        JSONObject sim2 = new JSONObject(rules.get(2).prepareMessage("Divar", CONTACT_SMS, "sim2", 1L));
+        assertEquals("09123456789", sim1.getString("account"));
+        assertEquals("09351234567", sim2.getString("account"));
+    }
+
+    @Test
     public void contactTemplateRendersTheServerContract() throws Exception {
         ForwardingConfig contact = rules().get(0);
         long sentStamp = 1_700_000_000_000L;

@@ -124,6 +124,60 @@
                     android:visibility="gone" />
 
                 <LinearLayout
+                    android:id="@+id/status_battery_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/status_battery_restricted"
+                        android:textColor="@color/colorDanger"
+                        android:textSize="13sp" />
+
+                    <Button
+                        android:id="@+id/btn_allow_background"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minHeight="36dp"
+                        android:text="@string/btn_allow_background" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/status_update_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/status_update"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="?attr/colorAccent"
+                        android:textSize="13sp" />
+
+                    <Button
+                        android:id="@+id/btn_update"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minHeight="36dp"
+                        android:text="@string/btn_update" />
+
+                </LinearLayout>
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_small"

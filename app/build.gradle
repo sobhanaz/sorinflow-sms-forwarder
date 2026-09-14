@@ -20,6 +20,8 @@ def hasReleaseKeystore = keystoreProps.getProperty('storeFile') != null
 // and the setup screen simply starts blank.
 def sorinflowServerUrl = (project.findProperty('sorinflowServerUrl')
         ?: System.getenv('SORINFLOW_SERVER_URL') ?: '').toString().trim()
+def updateRepo = (project.findProperty('sorinflowUpdateRepo')
+        ?: 'sobhanaz/sorinflow-sms-forwarder').toString().trim()
 
 android {
     // The Java namespace stays tech.bogomolov.incomingsmsgateway so merging
@@ -32,12 +34,14 @@ android {
         applicationId "ir.sorinflow.smsforwarder"
         minSdkVersion 26
         targetSdkVersion 34
-        versionCode 14
-        versionName "3.0.0"
+        versionCode 15
+        versionName "3.1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField "String", "DEFAULT_SERVER_URL", "\"${sorinflowServerUrl}\""
+        // GitHub repo whose Releases the in-app update check reads ("" disables it).
+        buildConfigField "String", "UPDATE_REPO", "\"${updateRepo}\""
     }
 
     signingConfigs {
@@ -86,6 +90,8 @@ dependencies {
     implementation "androidx.work:work-runtime:$work_version"
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
     implementation 'org.apache.commons:commons-text:1.9'
+    // In-app QR scanner for the panel's setup code.
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.mockito:mockito-core:3.7.0'
@@ -99,4 +105,6 @@ dependencies {
     androidTestImplementation "org.mockito:mockito-android:3.7.0"
     androidTestImplementation 'androidx.test:rules:1.5.0'
     androidTestImplementation "androidx.work:work-testing:$work_version"
+    // Local HTTP server for the end-to-end delivery test.
+    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
 }

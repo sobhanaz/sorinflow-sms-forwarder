@@ -23,6 +23,7 @@ public class SorinFlowSettings {
     private static final String PREFERENCE = "sorinflow_secure";
     private static final String KEY_BASE_URL = "base_url";
     private static final String KEY_ACCOUNT = "account";
+    private static final String KEY_ACCOUNT2 = "account2";
     private static final String KEY_SECRET = "secret";
 
     // Opening the encrypted store costs a Keystore round-trip, so it is opened once
@@ -31,11 +32,18 @@ public class SorinFlowSettings {
 
     private final String baseUrl;
     private final String account;
+    private final String account2;
     private final String secret;
 
     public SorinFlowSettings(String baseUrl, String account, String secret) {
+        this(baseUrl, account, "", secret);
+    }
+
+    /** account2 is the Divar account of the SIM in slot 2 on a dual-SIM phone; empty when unused. */
+    public SorinFlowSettings(String baseUrl, String account, String account2, String secret) {
         this.baseUrl = baseUrl == null ? "" : baseUrl;
         this.account = account == null ? "" : account;
+        this.account2 = account2 == null ? "" : account2;
         this.secret = secret == null ? "" : secret;
     }
 
@@ -45,6 +53,14 @@ public class SorinFlowSettings {
 
     public String getAccount() {
         return this.account;
+    }
+
+    public String getAccount2() {
+        return this.account2;
+    }
+
+    public boolean hasSecondAccount() {
+        return !this.account2.isEmpty();
     }
 
     public String getSecret() {
@@ -60,6 +76,7 @@ public class SorinFlowSettings {
         return new SorinFlowSettings(
                 pref.getString(KEY_BASE_URL, ""),
                 pref.getString(KEY_ACCOUNT, ""),
+                pref.getString(KEY_ACCOUNT2, ""),
                 pref.getString(KEY_SECRET, ""));
     }
 
@@ -67,6 +84,7 @@ public class SorinFlowSettings {
         prefs(context).edit()
                 .putString(KEY_BASE_URL, this.baseUrl)
                 .putString(KEY_ACCOUNT, this.account)
+                .putString(KEY_ACCOUNT2, this.account2)
                 .putString(KEY_SECRET, this.secret)
                 .commit();
     }

@@ -3,8 +3,12 @@ package tech.bogomolov.incomingsmsgateway;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ActivityNotFoundException;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.net.Uri;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.text.format.DateFormat;
 import android.text.format.DateUtils;
 import android.view.View;
@@ -47,8 +51,26 @@ final class StatusCard {
         view.findViewById(R.id.btn_setup).setOnClickListener(
                 v -> activity.startActivity(new Intent(activity, SetupActivity.class)));
         view.findViewById(R.id.btn_send_test).setOnClickListener(v -> card.sendTest());
+        view.findViewById(R.id.btn_allow_background).setOnClickListener(v -> card.requestBatteryExemption());
+        View.OnClickListener openLog = v ->
+                activity.startActivity(new Intent(activity, DeliveryLogActivity.class));
+        view.findViewById(R.id.status_last).setOnClickListener(openLog);
+        view.findViewById(R.id.status_last_detail).setOnClickListener(openLog);
         card.bind();
         return card;
+    }
+
+    // Opens the system dialog that puts the app on the battery-optimisation
+    // allowlist, which is what lets KeepAliveWorker restart the service from the
+    // background on Android 12+.
+    private void requestBatteryExemption() {
+        Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                Uri.parse("package:" + activity.getPackageName()));
+        try {
+            activity.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            activity.startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
+        }
     }
 
     void startWatching() {
@@ -67,9 +89,14 @@ final class StatusCard {
         long now = System.currentTimeMillis();
 
         TextView account = view.findViewById(R.id.status_account);
-        account.setText(settings.isConfigured()
-                ? context.getString(R.string.status_account, settings.getAccount())
-                : context.getString(R.string.status_not_configured));
+        if (!settings.isConfigured()) {
+            account.setText(R.string.status_not_configured);
+        } else if (settings.hasSecondAccount()) {
+            account.setText(context.getString(R.string.status_accounts_two,
+                    settings.getAccount(), settings.getAccount2()));
+        } else {
+            account.setText(context.getString(R.string.status_account, settings.getAccount()));
+        }
 
         TextView server = view.findViewById(R.id.status_server);
         View dot = view.findViewById(R.id.status_server_dot);
@@ -128,6 +155,25 @@ final class StatusCard {
         }
 
         view.findViewById(R.id.btn_send_test).setEnabled(settings.isConfigured() && !testRunning);
+
+        // Battery-optimisation warning: only once the phone is configured, and only
+        // while Android may still throttle the app.
+        PowerManager power = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        boolean exempt = power != null && power.isIgnoringBatteryOptimizations(context.getPackageName());
+        view.findViewById(R.id.status_battery_row)
+                .setVisibility(settings.isConfigured() && !exempt ? View.VISIBLE : View.GONE);
+
+        // Update offer from the last GitHub Releases check.
+        String latest = status.getString(UpdateCheck.KEY_LATEST_TAG, "");
+        String latestUrl = status.getString(UpdateCheck.KEY_LATEST_URL, "");
+        boolean newer = UpdateCheck.isNewer(latest, BuildConfig.VERSION_NAME) && !latestUrl.isEmpty();
+        view.findViewById(R.id.status_update_row).setVisibility(newer ? View.VISIBLE : View.GONE);
+        if (newer) {
+            ((TextView) view.findViewById(R.id.status_update))
+                    .setText(context.getString(R.string.status_update_available, latest));
+            view.findViewById(R.id.btn_update).setOnClickListener(v ->
+                    activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(latestUrl))));
+        }
     }
 
     private void sendTest() {

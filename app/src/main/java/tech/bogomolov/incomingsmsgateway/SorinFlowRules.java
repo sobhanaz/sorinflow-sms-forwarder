@@ -21,6 +21,9 @@ public final class SorinFlowRules {
     static final String KEY_PREFIX = "sorinflow_";
     public static final String KEY_CONTACT = KEY_PREFIX + "contact";
     public static final String KEY_LOGIN = KEY_PREFIX + "login";
+    // Dual-SIM: the first pair is then bound to SIM 1 and this pair to SIM 2.
+    public static final String KEY_CONTACT_SIM2 = KEY_PREFIX + "contact_sim2";
+    public static final String KEY_LOGIN_SIM2 = KEY_PREFIX + "login_sim2";
 
     public static final String SENDER = "Divar";
     public static final String FILTER_CONTACT = "اطلاعات تماس";
@@ -103,14 +106,19 @@ public final class SorinFlowRules {
 
     static ForwardingConfig buildRule(Context context, String key, String kind, String filter,
                                       SorinFlowSettings settings) {
+        return buildRule(context, key, kind, filter, settings.getBaseUrl(), settings.getAccount(), 0);
+    }
+
+    static ForwardingConfig buildRule(Context context, String key, String kind, String filter,
+                                      String baseUrl, String account, int simSlot) {
         ForwardingConfig config = new ForwardingConfig(context);
         config.setKey(key);
         config.setSender(SENDER);
         config.setIsSenderRegex(false);
         config.setSmsFilter(filter);
-        config.setUrl(otpUrl(settings.getBaseUrl()));
-        config.setSimSlot(0);
-        config.setTemplate(messageTemplate(kind, settings.getAccount()));
+        config.setUrl(otpUrl(baseUrl));
+        config.setSimSlot(simSlot);
+        config.setTemplate(messageTemplate(kind, account));
         config.setHeaders(ForwardingConfig.getDefaultJsonHeaders());
         config.setRetriesNumber(ForwardingConfig.getDefaultRetriesNumber());
         config.setIgnoreSsl(false);
@@ -125,17 +133,40 @@ public final class SorinFlowRules {
         return config;
     }
 
+    /**
+     * One account: two rules matching any SIM. Two accounts (dual-SIM phone): the
+     * same two rules bound to SIM slot 1 plus a second pair bound to slot 2, each
+     * pair carrying its own account.
+     */
     public static List<ForwardingConfig> buildRules(Context context, SorinFlowSettings settings) {
         List<ForwardingConfig> rules = new ArrayList<>();
-        rules.add(buildRule(context, KEY_CONTACT, KIND_CONTACT, FILTER_CONTACT, settings));
-        rules.add(buildRule(context, KEY_LOGIN, KIND_LOGIN, FILTER_LOGIN, settings));
+        String base = settings.getBaseUrl();
+        if (!settings.hasSecondAccount()) {
+            rules.add(buildRule(context, KEY_CONTACT, KIND_CONTACT, FILTER_CONTACT, base, settings.getAccount(), 0));
+            rules.add(buildRule(context, KEY_LOGIN, KIND_LOGIN, FILTER_LOGIN, base, settings.getAccount(), 0));
+            return rules;
+        }
+        rules.add(buildRule(context, KEY_CONTACT, KIND_CONTACT, FILTER_CONTACT, base, settings.getAccount(), 1));
+        rules.add(buildRule(context, KEY_LOGIN, KIND_LOGIN, FILTER_LOGIN, base, settings.getAccount(), 1));
+        rules.add(buildRule(context, KEY_CONTACT_SIM2, KIND_CONTACT, FILTER_CONTACT, base, settings.getAccount2(), 2));
+        rules.add(buildRule(context, KEY_LOGIN_SIM2, KIND_LOGIN, FILTER_LOGIN, base, settings.getAccount2(), 2));
         return rules;
     }
 
-    /** Creates or updates both rules and switches on the signed heartbeat (every 5 minutes). */
+    /**
+     * Creates or updates the rules (removing the SIM 2 pair when it is no longer
+     * wanted) and switches on the signed heartbeat (every 5 minutes).
+     */
     public static void apply(Context context, SorinFlowSettings settings) {
         for (ForwardingConfig rule : buildRules(context, settings)) {
             rule.save();
+        }
+        if (!settings.hasSecondAccount()) {
+            for (String key : new String[]{KEY_CONTACT_SIM2, KEY_LOGIN_SIM2}) {
+                ForwardingConfig stale = new ForwardingConfig(context);
+                stale.setKey(key);
+                stale.remove();
+            }
         }
         new HeartbeatSettings(true, heartbeatUrl(settings.getBaseUrl()),
                 HeartbeatSettings.DEFAULT_INTERVAL_MINUTES).save(context);

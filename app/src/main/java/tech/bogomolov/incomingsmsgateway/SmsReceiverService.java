@@ -1,5 +1,6 @@
 package tech.bogomolov.incomingsmsgateway;
 
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -47,6 +48,17 @@ public class SmsReceiverService extends Service {
      */
     public static void start(Context context) {
         start(context, null);
+    }
+
+    /** True while this service is running in our process (own services are always visible). */
+    public static boolean isRunning(Context context) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (SmsReceiverService.class.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void start(Context context, @Nullable String action) {

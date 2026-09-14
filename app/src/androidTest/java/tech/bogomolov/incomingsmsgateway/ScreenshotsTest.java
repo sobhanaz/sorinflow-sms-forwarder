@@ -66,6 +66,7 @@ public class ScreenshotsTest {
     public void tearDown() {
         clearState();
         setLocale(LocaleListCompat.getEmptyLocaleList());
+        setNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
     }
 
     @Test
@@ -94,6 +95,30 @@ public class ScreenshotsTest {
             onView(withId(R.id.status_account))
                     .check(matches(withText(context.getString(R.string.status_account, ACCOUNT))));
             capture("03-main-configured");
+        }
+    }
+
+    @Test
+    public void mainScreenConfiguredDark() {
+        seedConfiguredState();
+        setNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        try (ActivityScenario<MainActivity> ignored = ActivityScenario.launch(MainActivity.class)) {
+            capture("05-main-configured-dark");
+        }
+    }
+
+    @Test
+    public void deliveryLogScreen() {
+        seedConfiguredState();
+        long now = System.currentTimeMillis();
+        DeliveryLog.append(context, new DeliveryLog.Entry(now - 3_600_000L, "login", "••••54", "sim1", 503, 812L,
+                4_100L, DeliveryStatus.RESULT_FAILED, "http 503"));
+        DeliveryLog.append(context, new DeliveryLog.Entry(now - 1_800_000L, "test", "", "", 200, 143L,
+                -1L, DeliveryStatus.RESULT_OK, "test"));
+        DeliveryLog.append(context, new DeliveryLog.Entry(now - 35_000L, "contact", "••••69", "sim1", 200, 412L,
+                1_280L, DeliveryStatus.RESULT_OK, ""));
+        try (ActivityScenario<DeliveryLogActivity> ignored = ActivityScenario.launch(DeliveryLogActivity.class)) {
+            capture("06-delivery-log");
         }
     }
 
@@ -136,8 +161,15 @@ public class ScreenshotsTest {
                 Context.MODE_PRIVATE).edit().clear().commit();
         context.getSharedPreferences("heartbeat", Context.MODE_PRIVATE).edit().clear().commit();
         DeliveryStatus.prefs(context).edit().clear().commit();
+        DeliveryLog.clear(context);
         SorinFlowSettings.clear(context);
         FailedMessage.clear(context);
+    }
+
+    private void setNightMode(int mode) {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(
+                () -> AppCompatDelegate.setDefaultNightMode(mode));
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     }
 
     // Per-app locale switch; must run on the main thread. Applied to activities

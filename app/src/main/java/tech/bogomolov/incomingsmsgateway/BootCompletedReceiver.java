@@ -10,5 +10,6 @@ public class BootCompletedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent argIntent) {
         SmsReceiverService.start(context);
+        KeepAliveWorker.schedule(context);
     }
 }

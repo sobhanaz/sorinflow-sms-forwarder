@@ -105,4 +105,26 @@
     <string name="test_sending">در حال ارسال آزمایشی…</string>
     <string name="test_result_ok">سرور در %2$d ms با HTTP %1$d پاسخ داد (%3$s)</string>
     <string name="test_result_fail">آزمایش ناموفق: %s</string>
+    <!-- Delivery log, alerts, dual SIM, QR setup, keepalive, updates (3.1.0) -->
+    <string name="title_delivery_log">گزارش ارسال‌ها</string>
+    <string name="menu_delivery_log">گزارش ارسال‌ها</string>
+    <string name="log_empty">هنوز تلاشی برای ارسال انجام نشده است</string>
+    <string name="log_row_title">%1$s %2$s · %3$s</string>
+    <string name="log_row_detail">%1$s · HTTP %2$d · %3$d ms · %4$s پس از پیامک</string>
+    <string name="alerts_channel">هشدارها</string>
+    <string name="alert_delivery_failed_title">کد دیوار تحویل نشد</string>
+    <string name="alert_delivery_failed_text">%1$s · %2$s</string>
+    <string name="alert_server_title">سرور سورین‌فلو در دسترس نیست</string>
+    <string name="alert_server_text">%1$d دقیقه است که ضربان موفقی ارسال نشده · %2$s</string>
+    <string name="label_account_phone2">حساب دیوار برای سیم‌کارت ۲ (اختیاری)</string>
+    <string name="account_phone2_hint">فقط برای گوشی‌های دو سیم‌کارته: حسابی که سیم‌کارتش در اسلات ۲ است</string>
+    <string name="status_accounts_two">سیم‌کارت ۱: %1$s · سیم‌کارت ۲: %2$s</string>
+    <string name="btn_scan_qr">اسکن QR</string>
+    <string name="scan_qr_prompt">کد QR راه‌اندازی را از پنل سورین‌فلو اسکن کنید</string>
+    <string name="setup_payload_applied">تنظیمات از روی کد پر شد. آن‌ها را بررسی و ذخیره کنید.</string>
+    <string name="setup_payload_invalid">این کد، کد راه‌اندازی سورین‌فلو نیست</string>
+    <string name="status_battery_restricted">بهینه‌سازی باتری فعال است؛ اندروید ممکن است ارسال را کند یا متوقف کند.</string>
+    <string name="btn_allow_background">اجازهٔ پس‌زمینه</string>
+    <string name="status_update_available">به‌روزرسانی موجود است: %s</string>
+    <string name="btn_update">دانلود</string>
 </resources>

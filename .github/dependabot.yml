@@ -1,0 +1,17 @@
+# Weekly dependency updates: AndroidX/Material/WorkManager grouped into one PR,
+# everything else separately, plus the GitHub Actions used by the workflows.
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      androidx:
+        patterns:
+          - "androidx.*"
+          - "com.google.android.material:*"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

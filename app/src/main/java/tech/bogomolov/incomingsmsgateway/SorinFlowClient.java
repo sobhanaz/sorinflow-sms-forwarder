@@ -19,9 +19,9 @@ public final class SorinFlowClient {
     private SorinFlowClient() {
     }
 
-    static String heartbeatBody(Context context, SorinFlowSettings settings) {
+    static String heartbeatBody(Context context, String account) {
         ForwardingConfig template = new ForwardingConfig(context);
-        template.setTemplate(SorinFlowRules.heartbeatTemplate(settings.getAccount()));
+        template.setTemplate(SorinFlowRules.heartbeatTemplate(account));
         return template.prepareMessage("", "", "", System.currentTimeMillis());
     }
 
@@ -44,12 +44,19 @@ public final class SorinFlowClient {
         return request;
     }
 
-    /** Runs on the caller's (heartbeat) thread. */
+    /**
+     * Runs on the caller's (heartbeat) thread. A dual-SIM phone pings once per
+     * account so the panel shows both online; the card reflects the first.
+     */
     static String sendHeartbeat(Context context, SorinFlowSettings settings) {
-        String body = heartbeatBody(context, settings);
-        Request request = post(SorinFlowRules.heartbeatUrl(settings.getBaseUrl()), body,
+        String url = SorinFlowRules.heartbeatUrl(settings.getBaseUrl());
+        Request request = post(url, heartbeatBody(context, settings.getAccount()),
                 settings.getSecret(), Request.DEFAULT_CONNECT_TIMEOUT_MS, Request.DEFAULT_READ_TIMEOUT_MS);
         DeliveryStatus.recordHeartbeat(context, request, request.getResult());
+        if (settings.hasSecondAccount()) {
+            post(url, heartbeatBody(context, settings.getAccount2()),
+                    settings.getSecret(), Request.DEFAULT_CONNECT_TIMEOUT_MS, Request.DEFAULT_READ_TIMEOUT_MS);
+        }
         return request.getResult();
     }
 
@@ -68,6 +75,7 @@ public final class SorinFlowClient {
             Request request = post(SorinFlowRules.otpUrl(settings.getBaseUrl()), body,
                     settings.getSecret(), DirectDelivery.CONNECT_TIMEOUT_MS, DirectDelivery.READ_TIMEOUT_MS);
             DeliveryStatus.recordHeartbeat(app, request, request.getResult());
+            DeliveryLog.append(app, DeliveryLog.build(body, 0L, request, request.getResult()));
             main.post(() -> callback.onResult(request, request.getResult()));
         }, "SorinFlowTest").start();
     }

@@ -70,6 +70,21 @@ public class SorinFlowRulesApplyTest {
     }
 
     @Test
+    public void testSecondAccountInstallsSlotRulesAndDroppingItRemovesThem() {
+        SorinFlowRules.apply(context, new SorinFlowSettings("https://sorinflow.example",
+                "09123456789", "09351234567", "s3cret"));
+        assertEquals(4, ForwardingConfig.getAll(context).size());
+
+        SorinFlowRules.apply(context, settings("https://sorinflow.example"));
+
+        ArrayList<ForwardingConfig> rules = ForwardingConfig.getAll(context);
+        assertEquals(2, rules.size());
+        for (ForwardingConfig rule : rules) {
+            assertEquals(0, rule.getSimSlot());
+        }
+    }
+
+    @Test
     public void testStoredRulesCarryNoSecretButSignWithTheSetupOne() throws Exception {
         SorinFlowSettings settings = settings("https://sorinflow.example");
         settings.save(context);

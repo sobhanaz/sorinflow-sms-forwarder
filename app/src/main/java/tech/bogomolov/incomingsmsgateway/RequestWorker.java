@@ -41,6 +41,9 @@ public class RequestWorker extends Worker {
     // instead of WorkManager's backoff.
     public final static String DATA_DEADLINE = "DEADLINE";
 
+    /** Tag on every delivery request (used by the end-to-end test to drive constraints). */
+    public final static String TAG_DELIVERY = "delivery";
+
     public RequestWorker(
             @NonNull Context context,
             @NonNull WorkerParameters params) {
@@ -72,7 +75,8 @@ public class RequestWorker extends Worker {
                                 OneTimeWorkRequest.MIN_BACKOFF_MILLIS,
                                 TimeUnit.MILLISECONDS
                         )
-                        .setInputData(data);
+                        .setInputData(data)
+                        .addTag(TAG_DELIVERY);
 
         // Expedited work starts within seconds even in Doze. Below API 31 it would
         // have to run as a foreground service with its own notification, so it

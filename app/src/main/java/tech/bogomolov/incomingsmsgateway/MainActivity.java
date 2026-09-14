@@ -108,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
         if (statusCard != null) {
             statusCard.startWatching();
         }
+        UpdateCheck.maybeCheck(this);
     }
 
     @Override
@@ -146,6 +147,11 @@ public class MainActivity extends AppCompatActivity {
 
         if (id == R.id.action_bar_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
+            return true;
+        }
+
+        if (id == R.id.action_bar_delivery_log) {
+            startActivity(new Intent(this, DeliveryLogActivity.class));
             return true;
         }
 
@@ -242,6 +248,7 @@ public class MainActivity extends AppCompatActivity {
         if (!this.isServiceRunning()) {
             this.startService();
         }
+        KeepAliveWorker.schedule(this);
     }
 
     private boolean isServiceRunning() {

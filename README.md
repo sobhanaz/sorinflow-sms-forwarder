@@ -15,6 +15,10 @@ every five minutes so the SorinFlow panel knows the phone is alive.
   <img src="docs/screenshots/03-main-configured.png" width="23%" alt="Main screen after setup: server reachable, last forwarded code, the two Divar rules">
   <img src="docs/screenshots/04-main-configured-fa.png" width="23%" alt="The same screen in Persian (right-to-left)">
 </p>
+<p align="center">
+  <img src="docs/screenshots/05-main-configured-dark.png" width="23%" alt="Main screen in dark mode">
+  <img src="docs/screenshots/06-delivery-log.png" width="23%" alt="Delivery log: the last attempts with HTTP status, timing and the server's reason">
+</p>
 
 <sub>Screenshots are taken automatically on an Android 11 emulator by the CI
 test suite (`ScreenshotsTest`), so they always show the current build.</sub>
@@ -32,6 +36,10 @@ viewer are all still there; the SorinFlow layer sits on top of them.
 - [Installing](#installing)
 - [Setup (under two minutes per phone)](#setup-under-two-minutes-per-phone)
 - [The status card](#the-status-card)
+- [Delivery log and alerts](#delivery-log-and-alerts)
+- [QR code setup from the panel](#qr-code-setup-from-the-panel)
+- [Dual-SIM phones](#dual-sim-phones)
+- [Staying alive and up to date](#staying-alive-and-up-to-date)
 - [Where things are stored](#where-things-are-stored)
 - [Building](#building)
 - [Releases from GitHub Actions](#releases-from-github-actions)
@@ -58,6 +66,15 @@ viewer are all still there; the SorinFlow layer sits on top of them.
 - **Status card**: connection identity, server reachability, last forwarded
   message (kind, masked code, HTTP status, round trip, delay after the SMS),
   stored failures, and a **Send test to server** button.
+- **Delivery log and alerts**: the last 20 attempts with the server's reason,
+  a notification when a code could not be delivered, and one when the server
+  has not answered for 15 minutes.
+- **QR code setup**: scan the panel's setup code (or open a `sorinflow://setup`
+  link) and the form fills itself; no typing, no typos.
+- **Dual-SIM phones**: a second Divar account bound to SIM 2.
+- **Keepalive and updates**: a 15-minute job restarts the service if the ROM
+  killed it, the card asks for the battery-optimisation exemption that makes
+  this work, and it offers new releases from GitHub.
 - **Survives aggressive ROMs**: manifest SMS receiver (works even after the
   service was killed), foreground service of type `specialUse` (no daily runtime
   limit on Android 14+), the service is restarted on boot and on each SMS.
@@ -183,9 +200,14 @@ service is running.
    * **Divar account phone number**: the number of the SIM in this phone, as
      the Divar account knows it, e.g. `09123456789`. Persian digits are fine.
    * **Shared secret**: the value configured on the server.
+   * **Divar account for SIM 2**: only on a dual-SIM phone with a second
+     account, see [Dual-SIM phones](#dual-sim-phones).
+   Instead of typing, tap **Scan QR** and point the camera at the setup code
+   on the SorinFlow panel (see below); the fields fill in for you to check.
 4. Tap **Save**. The app creates the two Divar rules (visible in the list below
-   the card), turns on the heartbeat and starts the service. Saving again later
-   updates the same two rules instead of adding new ones.
+   the card), turns on the heartbeat, starts the service and schedules the
+   keepalive job. Saving again later updates the same rules instead of adding
+   new ones.
 5. Tap **Send test to server**. Within a couple of seconds a toast shows the
    HTTP status, the round-trip time and the server's answer (`test`), and the
    card's server line turns green.
@@ -206,9 +228,81 @@ by design).
 | **HTTP 200 · 412 ms round trip · 1.3 s after SMS · 14:02:11** | Details of that delivery; the server's `reason` is appended when it sent one (e.g. `stale_code`, `no_pending`). |
 | **N message(s) stored as failed** | Deliveries that gave up. The action bar then offers **Retry N failed**. |
 
+| **Battery optimisation is on… · Allow background** | Shown until the app is exempt from battery optimisation. Tap the button and confirm the system dialog; without it Android 12+ refuses to restart the service from the background. |
+| **Update available: v3.2.0 · Download** | A newer GitHub release exists (checked at most every six hours). Download and sideload it over the current install. |
+
+Tapping the *Last* lines opens the delivery log.
+
 **Retry N failed** re-sends stored messages through the normal retry policy,
 except Divar codes received more than 100 s ago, which it discards because
 Divar would reject them anyway.
+
+## Delivery log and alerts
+
+⋮ → **Delivery log** lists the last 20 attempts, newest first: kind and masked
+code, the outcome (*delivered* / *retrying* / *failed*), date and time, HTTP
+status, round trip, delay after the SMS, SIM slot, and the server's `reason`
+when it sent one (`stale_code`, `no_pending`, `bad signature`…). Test requests
+appear as kind `test`. Heartbeats are not listed; their state is the card's
+server line.
+
+Two warning notifications, on their own high-priority channel:
+
+- **Divar code not delivered** when a message gives up (deadline passed or a
+  permanent error), with the kind and the last reason.
+- **SorinFlow server unreachable** when no heartbeat or test has succeeded for
+  15 minutes; it is refreshed with the elapsed minutes at every heartbeat and
+  disappears at the first success.
+
+## QR code setup from the panel
+
+The setup screen's **Scan QR** button reads a code that carries the three
+settings. The panel generates it for an account like this (Python, with the
+`qrcode` package):
+
+```python
+from urllib.parse import urlencode
+import qrcode
+
+payload = "sorinflow://setup?" + urlencode({
+    "server": "https://your-sorinflow-server",
+    "account": "09123456789",
+    # "account2": "09351234567",   # optional, SIM 2 on a dual-SIM phone
+    "secret": OTP_FORWARDER_SECRET,
+})
+qrcode.make(payload).save("setup.png")
+```
+
+A JSON object with the same keys (`server`, `account`, `account2`, `secret`)
+is accepted too. The app never saves a scanned code by itself: it fills the
+form and the user reviews and taps **Save**. The same `sorinflow://setup?…`
+link opens the setup screen when scanned with the phone's camera app.
+
+The code contains the shared secret, so show it only to signed-in
+administrators of the panel and regenerate the secret if a code leaks.
+
+## Dual-SIM phones
+
+A phone with two Divar SIMs can serve two accounts: enter the second number
+in **Divar account for SIM 2**. The app then installs the two rules bound to
+SIM slot 1 and a second pair bound to slot 2, sends one heartbeat per account,
+and the card lists both. Clear the field and save to go back to a single
+account; the slot-2 rules are removed. SIM slot detection uses the extras
+Android attaches to the SMS broadcast; if a ROM omits them the log shows
+`undetected` and slot-bound rules do not match, so test with a real code after
+enabling it.
+
+## Staying alive and up to date
+
+- A **keepalive job** runs every 15 minutes (WorkManager's minimum) and
+  restarts the foreground service if an OEM battery manager killed it. On
+  Android 12+ that restart is only allowed while the app is exempt from
+  battery optimisation, which is why the card asks for it.
+- **Update check**: at most every six hours the app asks the GitHub Releases
+  API for the latest tag and, if it is newer than the installed version,
+  shows *Update available* with a download button. Sideloaded apps never
+  auto-update, so this is the only prompt you get. The repository it checks
+  is a build-time setting (`-PsorinflowUpdateRepo=owner/repo`).
 
 The ⋮ menu → **Syslog** shows the app's error log from logcat: HTTP status codes
 of failed requests, invalid regexes, refused service starts.
@@ -222,6 +316,7 @@ of failed requests, invalid regexes, refused service starts.
 | Heartbeat settings | `SharedPreferences` file `heartbeat` | — |
 | Last delivery / heartbeat outcome | `SharedPreferences` file `delivery_status` | Codes are stored masked |
 | Failed messages (opt-in per rule, on for Divar rules) | `SharedPreferences` file `failed_messages` | No secret inside; newest 500 kept |
+| Delivery log | `SharedPreferences` file `delivery_log` | Last 20 attempts, codes masked |
 | Pending retries | WorkManager's database | No secret inside (only the marker) |
 
 ## Building
@@ -327,7 +422,12 @@ stay easy; the app's identity is the `applicationId` `ir.sorinflow.smsforwarder`
 | `SorinFlowRules` | Builds/installs the two Divar rules and the heartbeat; URL validation; secret resolution. |
 | `SorinFlowClient` | Signed heartbeat and the `kind:test` request. |
 | `OtpCodes` | Persian/Arabic digit normalisation, code extraction, masking, phone normalisation. |
-| `DeliveryStatus` | Last message / heartbeat outcome for the status card. |
+| `DeliveryStatus` | Last message / heartbeat outcome for the status card; drives the alerts. |
+| `DeliveryLog`, `DeliveryLogActivity` | The last 20 attempts and the screen that lists them. |
+| `Alerts` | Warning notifications (undelivered code, server silent for 15 minutes). |
+| `KeepAliveWorker` | 15-minute periodic job that restarts the service if it died. |
+| `UpdateCheck` | GitHub Releases lookup behind the update offer. |
+| `SetupPayload` | Parser for the panel's QR / `sorinflow://setup` payload. |
 | `StatusCard`, `SetupActivity` | The card at the top of the main screen and the three-field setup form. |
 | `SmsReceiverService` | Foreground service (`specialUse`): keeps the process alive, runs the heartbeat thread. |
 | `ForwardingConfig`, `ForwardingConfigDialog`, `ListAdapter`, `MainActivity`, `SettingsActivity`, `FailedMessage`, `HeartbeatSettings`, `DeviceInfo` | Upstream's engine and UI: rule model and template placeholders, rule editor, list, backup/import, failed store. |
@@ -342,14 +442,25 @@ stay easy; the app's identity is the `applicationId` `ir.sorinflow.smsforwarder`
   contract, URL validation.
 - **Instrumented tests** (`app/src/androidTest`, device or emulator): rule and
   settings persistence (including that the encrypted store holds no plain
-  secret and that re-running setup updates rather than duplicates), the
-  failed-message store, WorkManager delivery against a public HTTP test
+  secret, that re-running setup updates rather than duplicates, and that the
+  SIM 2 rules come and go with the second account), the failed-message store
+  and the delivery log, WorkManager delivery against a public HTTP test
   service, Espresso form validation of the rule editor, settings and setup
-  screens, and `ScreenshotsTest`, which renders the screens shown above.
+  screens, `ScreenshotsTest` (light, dark and Persian screens shown above),
+  and `EndToEndDeliveryTest`: a real Divar-shaped SMS PDU (alphanumeric sender,
+  Persian text, Latin code) is handed to the manifest receiver while a local
+  mock server plays SorinFlow; it checks the path, the HMAC signature, the
+  JSON contract, the log and status records, the WorkManager fallback after a
+  500, and prints the in-app latency from injection to the server (asserted
+  under 5 s; a few hundred milliseconds on the CI emulator).
 
 The Espresso tests deliberately never take the path that starts the foreground
 service. Emulator runs are occasionally flaky on GitHub's two-core runners;
 re-running the job is enough.
+
+The `main` branch is protected: both CI jobs must pass and force-pushes are
+refused. Dependabot opens weekly pull requests for AndroidX/Material/WorkManager
+(grouped) and for the GitHub Actions used by the workflows.
 
 ## Keeping up with upstream
 
@@ -379,6 +490,17 @@ upstream files only where the delivery path had to change.
   icons on older launchers.
 
 ## Changelog
+
+### 3.1.0
+
+- Delivery log screen (last 20 attempts with HTTP status, timing and reason)
+  and warning notifications for undelivered codes and a silent server.
+- QR code / `sorinflow://setup` link setup with an in-app scanner.
+- Second Divar account bound to SIM 2 on dual-SIM phones.
+- Keepalive job every 15 minutes plus the battery-optimisation exemption
+  prompt; in-app update check against GitHub Releases.
+- End-to-end emulator test with a mock server and a real SMS PDU; dark-mode and
+  delivery-log screenshots; Dependabot and branch protection.
 
 ### 3.0.0 (fork of upstream 2.4.0)
 
@@ -428,6 +550,16 @@ MIT. Copyright (c) 2021 Konstantin Bogomolov (upstream), SorinFlow additions
 کلید محرمانه را وارد کنید و ذخیره کنید. سپس «ارسال آزمایشی به سرور» را بزنید؛
 باید پاسخ HTTP 200 را ببینید و نقطهٔ کنار «سرور» سبز شود. وقتی آیکون بی‌نهایت
 سورین‌فلو در نوار وضعیت هست، برنامه فعال است.
+
+**راه‌اندازی با QR:** به‌جای تایپ، در صفحهٔ راه‌اندازی «اسکن QR» را بزنید و کد
+راه‌اندازی پنل سورین‌فلو را اسکن کنید؛ فیلدها پر می‌شوند و فقط باید ذخیره کنید.
+اگر گوشی دو سیم‌کارته است و دو حساب دیوار دارید، شمارهٔ دوم را در «حساب دیوار
+برای سیم‌کارت ۲» وارد کنید.
+
+**گزارش و هشدار:** منوی ⋮ → «گزارش ارسال‌ها» بیست تلاش آخر را با کد HTTP، زمان و
+دلیل سرور نشان می‌دهد. اگر کدی تحویل نشود یا سرور ۱۵ دقیقه پاسخ ندهد، اعلان
+هشدار می‌گیرید. اگر روی کارت «اجازهٔ پس‌زمینه» دیدید، آن را بزنید و تأیید کنید تا
+اندروید اجازه دهد سرویس در پس‌زمینه دوباره راه بیفتد.
 
 **کارت وضعیت:** خط «سرور» نتیجهٔ آخرین ضربان یا آزمایش را نشان می‌دهد (سبز =
 در دسترس، قرمز = ناموفق با دلیل، مثلاً `http 401` یعنی کلید محرمانه با سرور

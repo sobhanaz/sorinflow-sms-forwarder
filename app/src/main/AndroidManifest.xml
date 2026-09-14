@@ -8,6 +8,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Lets the status card open the system "allow background" dialog, so the
+         keepalive job may restart the service on Android 12+. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <!--
         allowBackup=false: the rule store and the encrypted SorinFlow settings are
@@ -20,6 +23,7 @@
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
@@ -69,11 +73,30 @@
             </intent-filter>
         </receiver>
 
+        <!--
+            Exported only for the sorinflow://setup deep link (a panel QR code
+            scanned with the camera app). The link merely pre-fills the form; the
+            user still reviews and saves.
+        -->
         <activity
             android:name=".SetupActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_setup"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="setup"
+                    android:scheme="sorinflow" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".DeliveryLogActivity"
+            android:exported="false"
+            android:label="@string/title_delivery_log" />
 
         <activity
             android:name=".SettingsActivity"

@@ -105,4 +105,26 @@
     <string name="test_sending">Sending test…</string>
     <string name="test_result_ok">Server answered HTTP %1$d in %2$d ms (%3$s)</string>
     <string name="test_result_fail">Test failed: %s</string>
+    <!-- Delivery log, alerts, dual SIM, QR setup, keepalive, updates (3.1.0) -->
+    <string name="title_delivery_log">Delivery log</string>
+    <string name="menu_delivery_log">Delivery log</string>
+    <string name="log_empty">No delivery attempts yet</string>
+    <string name="log_row_title">%1$s %2$s · %3$s</string>
+    <string name="log_row_detail">%1$s · HTTP %2$d · %3$d ms · %4$s after SMS</string>
+    <string name="alerts_channel">Alerts</string>
+    <string name="alert_delivery_failed_title">Divar code not delivered</string>
+    <string name="alert_delivery_failed_text">%1$s · %2$s</string>
+    <string name="alert_server_title">SorinFlow server unreachable</string>
+    <string name="alert_server_text">No successful heartbeat for %1$d minutes · %2$s</string>
+    <string name="label_account_phone2">Divar account for SIM 2 (optional)</string>
+    <string name="account_phone2_hint">Dual-SIM phones only: the account whose SIM is in slot 2</string>
+    <string name="status_accounts_two">SIM 1: %1$s · SIM 2: %2$s</string>
+    <string name="btn_scan_qr">Scan QR</string>
+    <string name="scan_qr_prompt">Scan the setup QR code from the SorinFlow panel</string>
+    <string name="setup_payload_applied">Settings filled in from the code. Check them and tap Save.</string>
+    <string name="setup_payload_invalid">That code is not a SorinFlow setup code</string>
+    <string name="status_battery_restricted">Battery optimisation is on; Android may delay or kill the forwarder.</string>
+    <string name="btn_allow_background">Allow background</string>
+    <string name="status_update_available">Update available: %s</string>
+    <string name="btn_update">Download</string>
 </resources>

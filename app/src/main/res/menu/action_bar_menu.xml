@@ -18,6 +18,11 @@
         app:showAsAction="never"
         />
     <item
+        android:id="@+id/action_bar_delivery_log"
+        android:title="@string/menu_delivery_log"
+        app:showAsAction="never"
+        />
+    <item
         android:id="@+id/action_bar_syslogs"
         android:title="@string/menu_syslog"
         app:showAsAction="never"

@@ -32,6 +32,8 @@ public final class DeliveryStatus {
     static final String KEY_HB_RTT = "hb_rtt_ms";
     static final String KEY_HB_OK = "hb_ok";
     static final String KEY_HB_REASON = "hb_reason";
+    // When the current run of failed heartbeats/tests started; 0 while the server answers.
+    static final String KEY_HB_FAILING_SINCE = "hb_failing_since";
 
     public static final String RESULT_OK = "ok";
     public static final String RESULT_RETRYING = "retrying";
@@ -77,21 +79,34 @@ public final class DeliveryStatus {
                         Request.RESULT_SUCCESS.equals(result) ? RESULT_OK : RESULT_RETRYING)
                 .putString(KEY_MSG_REASON, reason(request))
                 .commit();
+        DeliveryLog.append(context, DeliveryLog.build(payload, receivedStamp, request, result));
     }
 
     /** Called once a delivery is abandoned (deadline passed or permanent error). */
     static void markFailed(Context context) {
-        prefs(context).edit().putString(KEY_MSG_RESULT, RESULT_FAILED).commit();
+        SharedPreferences prefs = prefs(context);
+        prefs.edit().putString(KEY_MSG_RESULT, RESULT_FAILED).commit();
+        DeliveryLog.markNewestFailed(context);
+        Alerts.deliveryFailed(context, prefs.getString(KEY_MSG_KIND, ""), prefs.getString(KEY_MSG_REASON, ""));
     }
 
     static void recordHeartbeat(Context context, Request request, String result) {
-        prefs(context).edit()
+        boolean ok = Request.RESULT_SUCCESS.equals(result);
+        SharedPreferences prefs = prefs(context);
+        long failingSince = ok ? 0L : prefs.getLong(KEY_HB_FAILING_SINCE, 0L);
+        if (!ok && failingSince == 0L) {
+            failingSince = System.currentTimeMillis();
+        }
+        String reason = reason(request);
+        prefs.edit()
                 .putLong(KEY_HB_TIME, System.currentTimeMillis())
                 .putInt(KEY_HB_HTTP, request.getResponseCode())
                 .putLong(KEY_HB_RTT, request.getElapsedMillis())
-                .putBoolean(KEY_HB_OK, Request.RESULT_SUCCESS.equals(result))
-                .putString(KEY_HB_REASON, reason(request))
+                .putBoolean(KEY_HB_OK, ok)
+                .putString(KEY_HB_REASON, reason)
+                .putLong(KEY_HB_FAILING_SINCE, failingSince)
                 .commit();
+        Alerts.serverCheck(context, ok, failingSince, reason);
     }
 
     /** The server's "reason"/"detail" field when it sent JSON, else the transport failure, else "". */
