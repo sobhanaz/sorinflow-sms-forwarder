@@ -23,7 +23,7 @@ public class SorinFlowRulesTest {
     private static final String ASTERISK = "*";
 
     private static final SorinFlowSettings SETTINGS =
-            new SorinFlowSettings("https://sorinflow.com", "09123456789", "s3cret");
+            new SorinFlowSettings("https://sorinflow.example", "09123456789", "s3cret");
 
     private List<ForwardingConfig> rules() {
         return SorinFlowRules.buildRules(null, SETTINGS);
@@ -46,7 +46,7 @@ public class SorinFlowRulesTest {
         assertEquals("کد تایید", login.getSmsFilter());
 
         for (ForwardingConfig rule : rules) {
-            assertEquals("https://sorinflow.com/api/scraper/otp-inbound", rule.getUrl());
+            assertEquals("https://sorinflow.example/api/scraper/otp-inbound", rule.getUrl());
             assertTrue(rule.getSignHmacSha256());
             // The secret is resolved from the encrypted settings at send time.
             assertNull(rule.getSignHmacSha256Secret());
@@ -145,20 +145,20 @@ public class SorinFlowRulesTest {
 
     @Test
     public void normalizeBaseUrlAcceptsHttpsAndStripsSlashesAndPastedEndpoints() {
-        assertEquals("https://sorinflow.com", SorinFlowRules.normalizeBaseUrl("https://sorinflow.com"));
-        assertEquals("https://sorinflow.com", SorinFlowRules.normalizeBaseUrl(" https://sorinflow.com/ "));
-        assertEquals("https://sorinflow.com",
-                SorinFlowRules.normalizeBaseUrl("https://sorinflow.com/api/scraper/otp-inbound"));
-        assertEquals("https://sorinflow.com",
-                SorinFlowRules.normalizeBaseUrl("https://sorinflow.com/api/scraper/forwarder-heartbeat/"));
-        assertEquals("https://staging.sorinflow.com:8443",
-                SorinFlowRules.normalizeBaseUrl("https://staging.sorinflow.com:8443/"));
+        assertEquals("https://sorinflow.example", SorinFlowRules.normalizeBaseUrl("https://sorinflow.example"));
+        assertEquals("https://sorinflow.example", SorinFlowRules.normalizeBaseUrl(" https://sorinflow.example/ "));
+        assertEquals("https://sorinflow.example",
+                SorinFlowRules.normalizeBaseUrl("https://sorinflow.example/api/scraper/otp-inbound"));
+        assertEquals("https://sorinflow.example",
+                SorinFlowRules.normalizeBaseUrl("https://sorinflow.example/api/scraper/forwarder-heartbeat/"));
+        assertEquals("https://staging.sorinflow.example:8443",
+                SorinFlowRules.normalizeBaseUrl("https://staging.sorinflow.example:8443/"));
     }
 
     @Test
     public void normalizeBaseUrlRejectsAnythingButHttps() {
-        assertNull(SorinFlowRules.normalizeBaseUrl("http://sorinflow.com"));
-        assertNull(SorinFlowRules.normalizeBaseUrl("sorinflow.com"));
+        assertNull(SorinFlowRules.normalizeBaseUrl("http://sorinflow.example"));
+        assertNull(SorinFlowRules.normalizeBaseUrl("sorinflow.example"));
         assertNull(SorinFlowRules.normalizeBaseUrl("https://"));
         assertNull(SorinFlowRules.normalizeBaseUrl(""));
         assertNull(SorinFlowRules.normalizeBaseUrl(null));
@@ -166,9 +166,9 @@ public class SorinFlowRulesTest {
 
     @Test
     public void endpointUrlsAppendTheFixedPaths() {
-        assertEquals("https://sorinflow.com/api/scraper/otp-inbound",
-                SorinFlowRules.otpUrl("https://sorinflow.com"));
-        assertEquals("https://sorinflow.com/api/scraper/forwarder-heartbeat",
-                SorinFlowRules.heartbeatUrl("https://sorinflow.com"));
+        assertEquals("https://sorinflow.example/api/scraper/otp-inbound",
+                SorinFlowRules.otpUrl("https://sorinflow.example"));
+        assertEquals("https://sorinflow.example/api/scraper/forwarder-heartbeat",
+                SorinFlowRules.heartbeatUrl("https://sorinflow.example"));
     }
 }

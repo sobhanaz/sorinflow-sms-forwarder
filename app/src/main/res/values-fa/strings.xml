@@ -76,7 +76,7 @@
     <string name="label_setup_section">اتصال این گوشی به سورین‌فلو</string>
     <string name="setup_info">آدرس سرور سورین‌فلو، شماره حساب دیوار که سیم‌کارتش در این گوشی است و کلید محرمانه‌ای که روی سرور تنظیم شده را وارد کنید. با ذخیره، دو قانون ارسال پیامک دیوار ساخته و ضربان فعال می‌شود.</string>
     <string name="label_server_url">آدرس سرور سورین‌فلو</string>
-    <string name="server_url_hint">https://sorinflow.com</string>
+    <string name="server_url_hint">در نسخه‌های رسمی از قبل پر شده است؛ در غیر این صورت مثلاً https://example.com</string>
     <string name="label_account_phone">شماره موبایل حساب دیوار</string>
     <string name="account_phone_hint">شماره سیم‌کارت داخل این گوشی، مثلاً 09123456789</string>
     <string name="label_shared_secret">کلید محرمانه مشترک</string>

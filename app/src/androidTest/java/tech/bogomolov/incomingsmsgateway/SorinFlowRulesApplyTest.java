@@ -42,36 +42,36 @@ public class SorinFlowRulesApplyTest {
 
     @Test
     public void testApplyInstallsTwoRulesAndTheHeartbeat() {
-        SorinFlowRules.apply(context, settings("https://sorinflow.com"));
+        SorinFlowRules.apply(context, settings("https://sorinflow.example"));
 
         ArrayList<ForwardingConfig> rules = ForwardingConfig.getAll(context);
         assertEquals(2, rules.size());
         for (ForwardingConfig rule : rules) {
             assertTrue(SorinFlowRules.isSorinFlowRule(rule));
-            assertEquals("https://sorinflow.com/api/scraper/otp-inbound", rule.getUrl());
+            assertEquals("https://sorinflow.example/api/scraper/otp-inbound", rule.getUrl());
         }
 
         HeartbeatSettings heartbeat = HeartbeatSettings.load(context);
         assertTrue(heartbeat.isEnabled());
-        assertEquals("https://sorinflow.com/api/scraper/forwarder-heartbeat", heartbeat.getUrl());
+        assertEquals("https://sorinflow.example/api/scraper/forwarder-heartbeat", heartbeat.getUrl());
         assertEquals(HeartbeatSettings.DEFAULT_INTERVAL_MINUTES, heartbeat.getIntervalMinutes());
     }
 
     @Test
     public void testApplyTwiceUpdatesInsteadOfDuplicating() {
-        SorinFlowRules.apply(context, settings("https://old.sorinflow.com"));
-        SorinFlowRules.apply(context, settings("https://sorinflow.com"));
+        SorinFlowRules.apply(context, settings("https://old.sorinflow.example"));
+        SorinFlowRules.apply(context, settings("https://sorinflow.example"));
 
         ArrayList<ForwardingConfig> rules = ForwardingConfig.getAll(context);
         assertEquals(2, rules.size());
         for (ForwardingConfig rule : rules) {
-            assertEquals("https://sorinflow.com/api/scraper/otp-inbound", rule.getUrl());
+            assertEquals("https://sorinflow.example/api/scraper/otp-inbound", rule.getUrl());
         }
     }
 
     @Test
     public void testStoredRulesCarryNoSecretButSignWithTheSetupOne() throws Exception {
-        SorinFlowSettings settings = settings("https://sorinflow.com");
+        SorinFlowSettings settings = settings("https://sorinflow.example");
         settings.save(context);
         SorinFlowRules.apply(context, settings);
 

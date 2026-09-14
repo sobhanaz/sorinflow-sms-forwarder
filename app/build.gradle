@@ -14,6 +14,13 @@ if (keystorePropsFile.exists()) {
 }
 def hasReleaseKeystore = keystoreProps.getProperty('storeFile') != null
 
+// Server address baked into official builds as BuildConfig.DEFAULT_SERVER_URL.
+// It comes from the SORINFLOW_SERVER_URL environment variable (a GitHub Actions
+// secret in CI) or -PsorinflowServerUrl=...; a plain local build leaves it empty
+// and the setup screen simply starts blank.
+def sorinflowServerUrl = (project.findProperty('sorinflowServerUrl')
+        ?: System.getenv('SORINFLOW_SERVER_URL') ?: '').toString().trim()
+
 android {
     // The Java namespace stays tech.bogomolov.incomingsmsgateway so merging
     // upstream doesn't turn into a whole-tree rename; the applicationId below is
@@ -29,6 +36,8 @@ android {
         versionName "3.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "DEFAULT_SERVER_URL", "\"${sorinflowServerUrl}\""
     }
 
     signingConfigs {

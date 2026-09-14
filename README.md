@@ -1,7 +1,7 @@
 # SorinFlow Forwarder
 
-An Android app that forwards Divar's one-time-code SMS to a
-[SorinFlow](https://sorinflow.com) server within seconds. It runs on the phone
+An Android app that forwards Divar's one-time-code SMS to a SorinFlow
+server within seconds. It runs on the phone
 that holds the Divar account's SIM; when Divar sends a **contact-info code** or a
 **login code**, the app POSTs it, signed, to `/api/scraper/otp-inbound`, and pings
 `/api/scraper/forwarder-heartbeat` every five minutes so the panel knows the
@@ -90,8 +90,10 @@ running.
 1. Open the app and grant the SMS and notification permissions it asks for.
 2. Tap **Set up** on the SorinFlow card (also in the ⋮ menu → *SorinFlow setup*).
 3. Fill in:
-   * **SorinFlow server URL**: `https://sorinflow.com` (https only; a pasted
-     endpoint path or trailing slash is stripped automatically).
+   * **SorinFlow server URL**: pre-filled in official builds (the address is
+     injected at build time from the repository's `SORINFLOW_SERVER_URL`
+     secret, see *Releases* below); otherwise type it. https only; a pasted
+     endpoint path or trailing slash is stripped automatically.
    * **Divar account phone number**: the number of the SIM in this phone, as
      the Divar account knows it, e.g. `09123456789`. Persian digits are fine.
    * **Shared secret**: the value configured on the server.
@@ -164,6 +166,28 @@ Keep the keystore and its password safe: an update signed with a different key
 cannot be installed over the existing app. Bump `versionCode` and
 `versionName` in `app/build.gradle` for every release.
 
+### Releases from GitHub Actions
+
+The repository is public, so the server address and the signing material are
+not in the source. They live under *Settings → Secrets and variables → Actions*
+and the `Release APK` workflow (`.github/workflows/release.yml`) reads them:
+
+| Secret | Purpose |
+|---|---|
+| `SORINFLOW_SERVER_URL` | Baked into the build as `BuildConfig.DEFAULT_SERVER_URL`, pre-filling the setup screen |
+| `SORINFLOW_KEYSTORE_BASE64` | The release keystore, `base64 -i sorinflow-forwarder.jks` |
+| `SORINFLOW_KEYSTORE_PASSWORD`, `SORINFLOW_KEY_ALIAS`, `SORINFLOW_KEY_PASSWORD` | Keystore credentials |
+
+The HMAC shared secret is deliberately **not** among them: anything baked into
+an APK can be extracted, so it is entered on each phone and stored encrypted
+there.
+
+Pushing a tag such as `v3.0.0` builds the signed APK, verifies its signature
+and attaches it to a GitHub Release; *Actions → Release APK → Run workflow*
+builds the same APK as a downloadable artifact without publishing a release.
+A local build without the secrets still works: the release APK is unsigned
+and the server field starts empty.
+
 ## Advanced: generic forwarding rules
 
 Everything the upstream app can do still works: add rules with the **+**
@@ -198,6 +222,6 @@ Protect را با «به هر حال نصب شود» رد کنید (هشدار �
 غیرفعال کنید.
 
 **راه‌اندازی:** برنامه را باز کنید، دسترسی‌ها را بدهید، روی «راه‌اندازی» بزنید،
-آدرس سرور (`https://sorinflow.com`)، شمارهٔ موبایل حساب دیوار و کلید محرمانه
-را وارد کنید و ذخیره کنید. سپس «ارسال آزمایشی به سرور» را بزنید؛ باید پاسخ
+آدرس سرور (در نسخه‌های رسمی از قبل پر شده است)، شمارهٔ موبایل حساب دیوار و
+کلید محرمانه را وارد کنید و ذخیره کنید. سپس «ارسال آزمایشی به سرور» را بزنید؛ باید پاسخ
 HTTP 200 را ببینید. وقتی آیکون `F` در نوار وضعیت هست، برنامه فعال است.

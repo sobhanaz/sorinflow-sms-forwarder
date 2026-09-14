@@ -51,7 +51,7 @@ public class SetupActivityTest {
 
     @Test
     public void testHttpUrlRejected() {
-        fill("http://sorinflow.com", "09123456789", "s3cret");
+        fill("http://sorinflow.example", "09123456789", "s3cret");
 
         onView(withId(R.id.btn_setup_save)).perform(scrollTo(), click());
 
@@ -61,7 +61,7 @@ public class SetupActivityTest {
 
     @Test
     public void testShortPhoneRejected() {
-        fill("https://sorinflow.com", "0912", "s3cret");
+        fill("https://sorinflow.example", "0912", "s3cret");
 
         onView(withId(R.id.btn_setup_save)).perform(scrollTo(), click());
 
@@ -71,7 +71,7 @@ public class SetupActivityTest {
 
     @Test
     public void testEmptySecretRejected() {
-        fill("https://sorinflow.com", "09123456789", "");
+        fill("https://sorinflow.example", "09123456789", "");
 
         onView(withId(R.id.btn_setup_save)).perform(scrollTo(), click());
 

@@ -31,7 +31,11 @@ public class SetupActivity extends AppCompatActivity {
         }
 
         SorinFlowSettings settings = SorinFlowSettings.load(this);
-        ((EditText) findViewById(R.id.input_server_url)).setText(settings.getBaseUrl());
+        // Official builds carry the server address (injected at build time from a
+        // repository secret); a fresh install starts with it pre-filled.
+        String baseUrl = settings.getBaseUrl().isEmpty()
+                ? BuildConfig.DEFAULT_SERVER_URL : settings.getBaseUrl();
+        ((EditText) findViewById(R.id.input_server_url)).setText(baseUrl);
         ((EditText) findViewById(R.id.input_account_phone)).setText(settings.getAccount());
         ((EditText) findViewById(R.id.input_shared_secret)).setText(settings.getSecret());
 

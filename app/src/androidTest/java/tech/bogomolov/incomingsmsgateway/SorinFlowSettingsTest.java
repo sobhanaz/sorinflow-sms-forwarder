@@ -50,10 +50,10 @@ public class SorinFlowSettingsTest {
 
     @Test
     public void testSaveAndLoadRoundTrip() {
-        new SorinFlowSettings("https://sorinflow.com", "09123456789", "s3cret").save(context);
+        new SorinFlowSettings("https://sorinflow.example", "09123456789", "s3cret").save(context);
 
         SorinFlowSettings loaded = SorinFlowSettings.load(context);
-        assertEquals("https://sorinflow.com", loaded.getBaseUrl());
+        assertEquals("https://sorinflow.example", loaded.getBaseUrl());
         assertEquals("09123456789", loaded.getAccount());
         assertEquals("s3cret", loaded.getSecret());
         assertTrue(loaded.isConfigured());
@@ -61,14 +61,14 @@ public class SorinFlowSettingsTest {
 
     @Test
     public void testPartialSettingsAreNotConfigured() {
-        new SorinFlowSettings("https://sorinflow.com", "09123456789", "").save(context);
+        new SorinFlowSettings("https://sorinflow.example", "09123456789", "").save(context);
 
         assertFalse(SorinFlowSettings.load(context).isConfigured());
     }
 
     @Test
     public void testSecretIsNotStoredInPlainText() {
-        new SorinFlowSettings("https://sorinflow.com", "09123456789", "s3cret").save(context);
+        new SorinFlowSettings("https://sorinflow.example", "09123456789", "s3cret").save(context);
 
         // The backing file holds encrypted keys and values only.
         for (Object value : context.getSharedPreferences(PREFERENCE, Context.MODE_PRIVATE)

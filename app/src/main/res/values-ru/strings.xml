@@ -76,7 +76,7 @@
     <string name="label_setup_section">Подключить этот телефон к SorinFlow</string>
     <string name="setup_info">Укажите сервер SorinFlow, аккаунт Divar, чья SIM-карта стоит в этом телефоне, и общий секрет, заданный на сервере. При сохранении создаются два правила пересылки для Divar и включается heartbeat.</string>
     <string name="label_server_url">Адрес сервера SorinFlow</string>
-    <string name="server_url_hint">https://sorinflow.com</string>
+    <string name="server_url_hint">В официальных сборках заполнен заранее; иначе, например, https://example.com</string>
     <string name="label_account_phone">Номер телефона аккаунта Divar</string>
     <string name="account_phone_hint">Номер SIM-карты в этом телефоне, например 09123456789</string>
     <string name="label_shared_secret">Общий секрет</string>

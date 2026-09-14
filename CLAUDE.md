@@ -46,7 +46,7 @@ Data flow: **SMS arrives → matched against configs → sent immediately on a b
 ## Conventions & gotchas
 
 - Bump `versionCode` **and** `versionName` in `app/build.gradle` for any release.
-- Server contract is fixed (see README); the app is built to it, never the other way round.
+- Server contract is fixed (see README); the app is built to it, never the other way round. The production host is **not** in the source: `BuildConfig.DEFAULT_SERVER_URL` comes from the `SORINFLOW_SERVER_URL` env var / `-PsorinflowServerUrl` (a GitHub Actions secret in `release.yml`, empty locally); tests and docs use `sorinflow.example`. The keystore and its passwords are GitHub secrets too (`SORINFLOW_KEYSTORE_BASE64`, `..._PASSWORD`, `SORINFLOW_KEY_ALIAS`, `SORINFLOW_KEY_PASSWORD`); the HMAC shared secret must never be baked into a build.
 - Manifest hardening is intentional: `usesCleartextTraffic="false"`, `allowBackup="false"`, service `exported="false"`. Keep `minSdk 26`; `Build.VERSION` guards below O are dead code and may be removed when touched.
 - Strings live in `values/strings.xml` (source of truth) **and** `values-ru`, `values-fa` — add every new key to all three (a missing key silently falls back to English; a script comparing `<string name=…>` sets across the files is a quick check). Persian is RTL; `supportsRtl` is on.
 - Android 14: any `registerReceiver` for a non-system broadcast needs `ContextCompat.registerReceiver(..., RECEIVER_NOT_EXPORTED)`; foreground services need a type; expedited WorkManager below API 31 would need `getForegroundInfo()` (we don't expedite there).

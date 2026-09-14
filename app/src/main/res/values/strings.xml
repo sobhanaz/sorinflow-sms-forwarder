@@ -76,7 +76,7 @@
     <string name="label_setup_section">Connect this phone to SorinFlow</string>
     <string name="setup_info">Enter the SorinFlow server, the Divar account whose SIM is in this phone, and the shared secret configured on the server. Saving creates the two Divar forwarding rules and turns on the heartbeat.</string>
     <string name="label_server_url">SorinFlow server URL</string>
-    <string name="server_url_hint">https://sorinflow.com</string>
+    <string name="server_url_hint">Pre-filled in official builds; otherwise e.g. https://example.com</string>
     <string name="label_account_phone">Divar account phone number</string>
     <string name="account_phone_hint">The number of the SIM in this phone, e.g. 09123456789</string>
     <string name="label_shared_secret">Shared secret</string>
