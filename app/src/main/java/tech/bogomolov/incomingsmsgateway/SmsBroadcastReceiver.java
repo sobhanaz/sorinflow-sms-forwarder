@@ -82,21 +82,32 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                                String content, long timeStamp) {
 
         String message = config.prepareMessage(sender, content, slotName, timeStamp);
+        long receivedStamp = System.currentTimeMillis();
 
-        Data data = new Data.Builder()
+        // SorinFlow rules sign with the secret from the encrypted setup store (never
+        // copied into this Data) and must reach the server before the code expires.
+        boolean sorinFlow = SorinFlowRules.isSorinFlowRule(config);
+
+        Data.Builder data = new Data.Builder()
                 .putString(RequestWorker.DATA_URL, config.getUrl())
                 .putString(RequestWorker.DATA_TEXT, message)
                 .putString(RequestWorker.DATA_HEADERS, config.getHeaders())
                 .putBoolean(RequestWorker.DATA_IGNORE_SSL, config.getIgnoreSsl())
                 .putBoolean(RequestWorker.DATA_CHUNKED_MODE, config.getChunkedMode())
                 .putInt(RequestWorker.DATA_MAX_RETRIES, config.getRetriesNumber())
-                .putBoolean(RequestWorker.DATA_SIGN_HMAC_SHA256, config.getSignHmacSha256())
-                .putString(RequestWorker.DATA_SIGN_HMAC_SHA256_SECRET, config.getSignHmacSha256Secret())
+                .putBoolean(RequestWorker.DATA_SIGN_HMAC_SHA256, config.getSignHmacSha256() || sorinFlow)
+                .putString(RequestWorker.DATA_SIGN_HMAC_SHA256_SECRET,
+                        sorinFlow ? null : config.getSignHmacSha256Secret())
+                .putBoolean(RequestWorker.DATA_SIGN_WITH_SETUP_SECRET, sorinFlow)
                 .putBoolean(RequestWorker.DATA_STORE_FAILED, config.getStoreFailed())
                 .putBoolean(RequestWorker.DATA_LOCAL_MODE, config.getLocalMode())
-                .build();
+                .putLong(RequestWorker.DATA_RECEIVED_STAMP, receivedStamp);
+        if (sorinFlow) {
+            data.putLong(RequestWorker.DATA_DEADLINE, RetrySchedule.deadlineFor(receivedStamp));
+        }
 
-        RequestWorker.enqueue(this.context, data);
+        // Immediate attempt on a background thread; WorkManager is only the fallback.
+        DirectDelivery.send(this.context, data.build());
     }
 
     // Per-config sender match. The asterisk wildcard always means "any sender"

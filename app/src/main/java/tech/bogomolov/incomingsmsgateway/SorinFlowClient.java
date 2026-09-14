@@ -1,0 +1,70 @@
+package tech.bogomolov.incomingsmsgateway;
+
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+
+/**
+ * Signed requests to the SorinFlow server that are not SMS deliveries: the periodic
+ * heartbeat and the manual "send test" from the status card. Both reuse the template
+ * engine (for %battery%, %network%, %version%) and the same X-Signature HMAC as the
+ * forwarding rules.
+ */
+public final class SorinFlowClient {
+
+    public interface Callback {
+        void onResult(Request request, String result);
+    }
+
+    private SorinFlowClient() {
+    }
+
+    static String heartbeatBody(Context context, SorinFlowSettings settings) {
+        ForwardingConfig template = new ForwardingConfig(context);
+        template.setTemplate(SorinFlowRules.heartbeatTemplate(settings.getAccount()));
+        return template.prepareMessage("", "", "", System.currentTimeMillis());
+    }
+
+    static String testBody(Context context, SorinFlowSettings settings) {
+        ForwardingConfig template = new ForwardingConfig(context);
+        template.setTemplate(SorinFlowRules.messageTemplate(SorinFlowRules.KIND_TEST, settings.getAccount()));
+        // No "Code:" in the text, so the code field stays empty and nothing can be matched.
+        return template.prepareMessage(SorinFlowRules.SENDER, "SorinFlow Forwarder test message",
+                "", System.currentTimeMillis());
+    }
+
+    /** Blocking signed POST; call off the main thread. */
+    static Request post(String url, String body, String secret, int connectTimeoutMs, int readTimeoutMs) {
+        Request request = new Request(url, body);
+        request.setTimeouts(connectTimeoutMs, readTimeoutMs);
+        request.setJsonHeaders(ForwardingConfig.getDefaultJsonHeaders());
+        request.setSignatureHeader(secret, body);
+        request.setUseChunkedMode(false);
+        request.execute();
+        return request;
+    }
+
+    /** Runs on the caller's (heartbeat) thread. */
+    static String sendHeartbeat(Context context, SorinFlowSettings settings) {
+        String body = heartbeatBody(context, settings);
+        Request request = post(SorinFlowRules.heartbeatUrl(settings.getBaseUrl()), body,
+                settings.getSecret(), Request.DEFAULT_CONNECT_TIMEOUT_MS, Request.DEFAULT_READ_TIMEOUT_MS);
+        DeliveryStatus.recordHeartbeat(context, request, request.getResult());
+        return request.getResult();
+    }
+
+    /** Posts a kind:"test" payload on a background thread; the callback runs on the main thread. */
+    public static void sendTest(Context context, Callback callback) {
+        final Context app = context.getApplicationContext();
+        final Handler main = new Handler(Looper.getMainLooper());
+        new Thread(() -> {
+            SorinFlowSettings settings = SorinFlowSettings.load(app);
+            long started = System.currentTimeMillis();
+            String body = testBody(app, settings);
+            Request request = post(SorinFlowRules.otpUrl(settings.getBaseUrl()), body,
+                    settings.getSecret(), DirectDelivery.CONNECT_TIMEOUT_MS, DirectDelivery.READ_TIMEOUT_MS);
+            DeliveryStatus.recordMessage(app, body, started, request, request.getResult());
+            main.post(() -> callback.onResult(request, request.getResult()));
+        }, "SorinFlowTest").start();
+    }
+}

@@ -114,6 +114,10 @@ public class FailedMessage {
         json.put(RequestWorker.DATA_SIGN_HMAC_SHA256_SECRET, data.getString(RequestWorker.DATA_SIGN_HMAC_SHA256_SECRET));
         json.put(RequestWorker.DATA_STORE_FAILED, data.getBoolean(RequestWorker.DATA_STORE_FAILED, false));
         json.put(RequestWorker.DATA_LOCAL_MODE, data.getBoolean(RequestWorker.DATA_LOCAL_MODE, false));
+        json.put(RequestWorker.DATA_SIGN_WITH_SETUP_SECRET, data.getBoolean(RequestWorker.DATA_SIGN_WITH_SETUP_SECRET, false));
+        json.put(RequestWorker.DATA_RECEIVED_STAMP, data.getLong(RequestWorker.DATA_RECEIVED_STAMP, 0L));
+        // DATA_DEADLINE is deliberately not kept: a manual retry is the user's call,
+        // and the server rejects a stale code itself (reason "stale_code").
         return json;
     }
 
@@ -132,6 +136,8 @@ public class FailedMessage {
                 // regains the validated-internet constraint and a LAN-only
                 // delivery never runs (see RequestWorker.enqueue).
                 .putBoolean(RequestWorker.DATA_LOCAL_MODE, json.optBoolean(RequestWorker.DATA_LOCAL_MODE, false))
+                .putBoolean(RequestWorker.DATA_SIGN_WITH_SETUP_SECRET, json.optBoolean(RequestWorker.DATA_SIGN_WITH_SETUP_SECRET, false))
+                .putLong(RequestWorker.DATA_RECEIVED_STAMP, json.optLong(RequestWorker.DATA_RECEIVED_STAMP, 0L))
                 .build();
     }
 
