@@ -2,6 +2,7 @@ package tech.bogomolov.incomingsmsgateway;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import androidx.work.Data;
 
@@ -68,6 +69,12 @@ public final class DeliveryStatus {
         }
 
         long now = System.currentTimeMillis();
+        // One line per attempt in logcat, which is what a soak test on a release
+        // build can read (the log screen needs the UI).
+        Log.i("SmsGateway", "delivery kind=" + kind + " result=" + result
+                + " http=" + request.getResponseCode() + " rtt=" + request.getElapsedMillis() + "ms"
+                + " sinceSms=" + (receivedStamp > 0 ? (now - receivedStamp) + "ms" : "-")
+                + (reason(request).isEmpty() ? "" : " reason=" + reason(request)));
         prefs(context).edit()
                 .putLong(KEY_MSG_TIME, now)
                 .putString(KEY_MSG_KIND, kind)
