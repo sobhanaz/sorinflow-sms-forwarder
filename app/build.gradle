@@ -36,9 +36,9 @@ android {
         applicationId "ir.sorinflow.smsforwarder"
         minSdkVersion 26
         targetSdkVersion 34
-        versionCode 15
+        versionCode 16
         // Rolling CI builds append "+main.<build number>" (-PsorinflowVersionSuffix).
-        versionName "3.1.0" + (project.findProperty('sorinflowVersionSuffix') ?: '')
+        versionName "3.1.1" + (project.findProperty('sorinflowVersionSuffix') ?: '')
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 

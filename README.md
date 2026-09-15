@@ -508,6 +508,19 @@ upstream files only where the delivery path had to change.
 
 ## Changelog
 
+### 3.1.1
+
+- The service restarts right after an app update (previously it waited for
+  the 15-minute keepalive tick).
+- Phone-settings checklist for Xiaomi/HyperOS with buttons to the Autostart
+  manager and the app's battery page; the two Divar rules are named in the
+  list; the QR scanner stays in portrait.
+- Device ID from the panel (`X-Forwarder-Id`) for per-phone secrets.
+- Rolling *Latest build (main)* pre-release after every green change;
+  `scripts/install-latest.sh`.
+- Built against SDK 35 with current AndroidX, Material 1.14, WorkManager,
+  Mockito 5 and test libraries; Dependabot batched into one monthly PR.
+
 ### 3.1.0
 
 - Delivery log screen (last 20 attempts with HTTP status, timing and reason)
