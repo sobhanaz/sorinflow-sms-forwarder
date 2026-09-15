@@ -202,6 +202,10 @@ service is running.
    * **Shared secret**: the value configured on the server.
    * **Divar account for SIM 2**: only on a dual-SIM phone with a second
      account, see [Dual-SIM phones](#dual-sim-phones).
+   * **Device ID from the panel**: filled by the QR code. With it every
+     request carries `X-Forwarder-Id`, and the server checks this phone's own
+     secret (and can revoke just this phone). Leave it empty for a server
+     that uses one shared secret.
    Instead of typing, tap **Scan QR** and point the camera at the setup code
    on the SorinFlow panel (see below); the fields fill in for you to check.
 4. Tap **Save**. The app creates the two Divar rules (visible in the list below
@@ -230,6 +234,7 @@ by design).
 
 | **Battery optimisation is on… · Allow background** | Shown until the app is exempt from battery optimisation. Tap the button and confirm the system dialog; without it Android 12+ refuses to restart the service from the background. |
 | **Update available: v3.2.0 · Download** | A newer GitHub release exists (checked at most every six hours). Download and sideload it over the current install. |
+| **Xiaomi/HyperOS: Autostart and Battery «No restrictions» must be on · Phone settings** | Shown on Xiaomi, Redmi and POCO phones. Opens the checklist below with buttons straight to the Autostart manager and the app's battery page (also in ⋮ → *Phone settings*). |
 
 Tapping the *Last* lines opens the delivery log.
 
@@ -294,10 +299,16 @@ enabling it.
 
 ## Staying alive and up to date
 
-- A **keepalive job** runs every 15 minutes (WorkManager's minimum) and
-  restarts the foreground service if an OEM battery manager killed it. On
-  Android 12+ that restart is only allowed while the app is exempt from
-  battery optimisation, which is why the card asks for it.
+What the app does by itself: it runs as a foreground service, restarts after
+a reboot and after an update of the app, retries every 15 minutes through a
+**keepalive job** (WorkManager's minimum) if an OEM battery manager killed it,
+and asks for Android's battery-optimisation exemption (on Android 12+ a
+background restart is only allowed with it, which is why the card asks).
+
+What only you can do, once, on Xiaomi/HyperOS and similar ROMs (⋮ → *Phone
+settings* opens the pages): Battery → *No restrictions*, Autostart on, lock
+the app in Recents, RCS off in Google Messages. Without these the ROM closes
+the app after a few hours and codes stop arriving.
 - **Update check**: at most every six hours the app asks the GitHub Releases
   API for the latest tag and, if it is newer than the installed version,
   shows *Update available* with a download button. Sideloaded apps never
@@ -321,7 +332,7 @@ of failed requests, invalid regexes, refused service starts.
 
 ## Building
 
-Requirements: JDK 17 and the Android SDK with platform 34 and build-tools 34.
+Requirements: JDK 17 and the Android SDK with platform 35 and build-tools 34 or newer.
 Point the SDK at the project with `ANDROID_HOME` or a `local.properties`
 containing `sdk.dir=/path/to/android-sdk` (git-ignored).
 

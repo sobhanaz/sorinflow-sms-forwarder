@@ -28,7 +28,9 @@ android {
     // upstream doesn't turn into a whole-tree rename; the applicationId below is
     // the app's identity on the device and in `pm list packages`.
     namespace 'tech.bogomolov.incomingsmsgateway'
-    compileSdkVersion 34
+    // compileSdk 35 is what current AndroidX (core 1.16+) requires; targetSdk
+    // stays 34 on purpose (35 would switch the app to enforced edge-to-edge).
+    compileSdkVersion 35
 
     defaultConfig {
         applicationId "ir.sorinflow.smsforwarder"

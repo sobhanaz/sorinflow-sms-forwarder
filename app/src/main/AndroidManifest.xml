@@ -65,12 +65,18 @@
             </intent-filter>
         </receiver>
 
+        <!--
+            Restarts the forwarder after a reboot and after the app itself was
+            updated (a package update kills the process and START_STICKY does not
+            bring the service back); both broadcasts are system-only.
+        -->
         <receiver
             android:name=".BootCompletedReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
 
