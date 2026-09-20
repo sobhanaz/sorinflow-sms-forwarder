@@ -66,7 +66,11 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 slotId = 0;
             }
 
-            if (config.getSimSlot() > 0 && config.getSimSlot() != slotId) {
+            // A slot-bound rule (dual-SIM setup) and a ROM that does not say
+            // which SIM received the message: let every slot-bound rule fire
+            // rather than none. The server parks the copy sent for the wrong
+            // account and uses the right one; skipping both loses the code.
+            if (!SorinFlowRules.slotMatches(config.getSimSlot(), slotId)) {
                 continue;
             }
 

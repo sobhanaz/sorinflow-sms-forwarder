@@ -294,8 +294,11 @@ SIM slot 1 and a second pair bound to slot 2, sends one heartbeat per account,
 and the card lists both. Clear the field and save to go back to a single
 account; the slot-2 rules are removed. SIM slot detection uses the extras
 Android attaches to the SMS broadcast; if a ROM omits them the log shows
-`undetected` and slot-bound rules do not match, so test with a real code after
-enabling it.
+`undetected` and, since 3.2.0, every slot-bound rule fires — the code goes
+out once per account and the server keeps the one it was waiting for and
+parks the other. Test with a real code after enabling it. The SorinFlow panel
+puts both numbers into the setup QR (`account2`) when a device has a second
+SIM registered.
 
 ## Staying alive and up to date
 
@@ -507,6 +510,12 @@ upstream files only where the delivery path had to change.
   icons on older launchers.
 
 ## Changelog
+
+### 3.2.0
+
+- Dual-SIM phones on ROMs that do not name the receiving SIM: slot-bound
+  rules fire instead of matching nothing, so a code is never dropped
+  (`SorinFlowRules.slotMatches`). The panel's QR now carries `account2`.
 
 ### 3.1.1
 

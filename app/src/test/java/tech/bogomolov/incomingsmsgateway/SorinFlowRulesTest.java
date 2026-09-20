@@ -30,6 +30,20 @@ public class SorinFlowRulesTest {
     }
 
     @Test
+    public void slotBoundRulesFireWhenTheRomDoesNotNameTheSim() {
+        // any-SIM rule: always
+        assertTrue(SorinFlowRules.slotMatches(0, 0));
+        assertTrue(SorinFlowRules.slotMatches(0, 2));
+        // bound rule, detected slot: exact match only
+        assertTrue(SorinFlowRules.slotMatches(1, 1));
+        assertFalse(SorinFlowRules.slotMatches(1, 2));
+        assertFalse(SorinFlowRules.slotMatches(2, 1));
+        // bound rule, undetected slot: fire — the server sorts the two copies out
+        assertTrue(SorinFlowRules.slotMatches(1, 0));
+        assertTrue(SorinFlowRules.slotMatches(2, 0));
+    }
+
+    @Test
     public void buildsContactAndLoginRulesWithFixedKeys() {
         List<ForwardingConfig> rules = rules();
         assertEquals(2, rules.size());
