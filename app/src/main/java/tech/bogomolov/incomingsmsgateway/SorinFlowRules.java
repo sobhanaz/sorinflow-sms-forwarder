@@ -210,6 +210,17 @@ public final class SorinFlowRules {
                 HeartbeatSettings.DEFAULT_INTERVAL_MINUTES).save(context);
     }
 
+    /**
+     * Whether a rule bound to {@code ruleSlot} (0 = any SIM) applies to a message
+     * that arrived on {@code detectedSlot} (0 = the ROM did not say). An undetected
+     * slot matches every rule: on a dual-SIM setup that sends the code once per
+     * account, and the server keeps the one it was waiting for — the alternative
+     * is forwarding nothing at all.
+     */
+    public static boolean slotMatches(int ruleSlot, int detectedSlot) {
+        return ruleSlot <= 0 || detectedSlot <= 0 || ruleSlot == detectedSlot;
+    }
+
     /** The HMAC secret a rule signs with: the setup secret for SorinFlow rules, the rule's own otherwise. */
     public static String resolveSecret(Context context, ForwardingConfig config) {
         if (isSorinFlowRule(config)) {

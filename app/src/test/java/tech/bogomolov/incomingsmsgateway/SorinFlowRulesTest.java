@@ -30,6 +30,34 @@ public class SorinFlowRulesTest {
     }
 
     @Test
+    public void slotBoundRulesFireWhenTheRomDoesNotNameTheSim() {
+        // any-SIM rule: always
+        assertTrue(SorinFlowRules.slotMatches(0, 0));
+        assertTrue(SorinFlowRules.slotMatches(0, 2));
+        // bound rule, detected slot: exact match only
+        assertTrue(SorinFlowRules.slotMatches(1, 1));
+        assertFalse(SorinFlowRules.slotMatches(1, 2));
+        assertFalse(SorinFlowRules.slotMatches(2, 1));
+        // bound rule, undetected slot: fire — the server sorts the two copies out
+        assertTrue(SorinFlowRules.slotMatches(1, 0));
+        assertTrue(SorinFlowRules.slotMatches(2, 0));
+    }
+
+    @Test
+    public void twoAccountsGiveFourSlotBoundRules() {
+        SorinFlowSettings dual = new SorinFlowSettings("https://sorinflow.example", "09123456789", "09029315496", "s3cret");
+        List<ForwardingConfig> rules = SorinFlowRules.buildRules(null, dual);
+        assertEquals(4, rules.size());
+        assertEquals(1, rules.get(0).getSimSlot());
+        assertEquals(1, rules.get(1).getSimSlot());
+        assertEquals(2, rules.get(2).getSimSlot());
+        assertEquals(2, rules.get(3).getSimSlot());
+        assertEquals(SorinFlowRules.KEY_CONTACT_SIM2, rules.get(2).getKey());
+        assertTrue(rules.get(2).getTemplate().contains("\"account\":\"09029315496\""));
+        assertTrue(rules.get(0).getTemplate().contains("\"account\":\"09123456789\""));
+    }
+
+    @Test
     public void buildsContactAndLoginRulesWithFixedKeys() {
         List<ForwardingConfig> rules = rules();
         assertEquals(2, rules.size());
