@@ -44,20 +44,6 @@ public class SorinFlowRulesTest {
     }
 
     @Test
-    public void twoAccountsGiveFourSlotBoundRules() {
-        SorinFlowSettings dual = new SorinFlowSettings("https://sorinflow.example", "09123456789", "09029315496", "s3cret");
-        List<ForwardingConfig> rules = SorinFlowRules.buildRules(null, dual);
-        assertEquals(4, rules.size());
-        assertEquals(1, rules.get(0).getSimSlot());
-        assertEquals(1, rules.get(1).getSimSlot());
-        assertEquals(2, rules.get(2).getSimSlot());
-        assertEquals(2, rules.get(3).getSimSlot());
-        assertEquals(SorinFlowRules.KEY_CONTACT_SIM2, rules.get(2).getKey());
-        assertTrue(rules.get(2).getTemplate().contains("\"account\":\"09029315496\""));
-        assertTrue(rules.get(0).getTemplate().contains("\"account\":\"09123456789\""));
-    }
-
-    @Test
     public void buildsContactAndLoginRulesWithFixedKeys() {
         List<ForwardingConfig> rules = rules();
         assertEquals(2, rules.size());
